@@ -25,7 +25,7 @@ class NewMessageNotification extends Notification
         $url = url('/portal/messages');
 
         return (new MailMessage)
-            ->subject('Neue Nachricht: '.($this->messageModel->subject ?: 'Kundenportal Benachrichtigung'))
+            ->subject('Neue Nachricht: '.($this->messageModel->subject ?: 'Mieterportal Benachrichtigung'))
             ->greeting('Hallo '.($notifiable->name ?? '').',')
             ->line('Sie haben eine neue Nachricht von **'.$senderName.'** erhalten:')
             ->line('"'.Str::limit($this->messageModel->body, 200).'"')

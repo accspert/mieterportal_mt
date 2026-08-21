@@ -1,6 +1,6 @@
-# Kundenportal — Modernes Immobilien- & Mieterverwaltungssystem
+# Mieterportal — Modernes Immobilien- & Mieterverwaltungssystem
 
-Das **Kundenportal** ist eine moderne Web-Plattform zur digitalen Verwaltung von Immobilien, Mieter- & Eigentümer-Kontakten, Service-Tickets, Abrechnungsbelegen, Dokumenten und Aufgaben.
+Das **Mieterportal** ist eine moderne Web-Plattform zur digitalen Verwaltung von Immobilien, Mieter- & Eigentümer-Kontakten, Service-Tickets, Abrechnungsbelegen, Dokumenten und Aufgaben.
 
 ---
 
@@ -17,7 +17,7 @@ Die Anwendung basiert auf einer modularen Multi-Interface-Architektur:
    - Revisionssicheres Aktivitäten-Audit (`spatie/laravel-activitylog`).
    - Global Search über alle Stammdaten.
 
-2. **Self-Service Kundenportal (Tenants & Owners)**
+2. **Self-Service Mieterportal (Tenants & Owners)**
    - Responsives Mieter- & Eigentümer-Portal unter `/portal` mit modernem Dark-Mode-Design.
    - Dashboard mit Kennzahlen, offenen Rechnungen, aktiven Vorgängen und Benachrichtigungen.
    - Schadensmeldungen einreichen mit Foto- & Dateianhängen.
@@ -49,7 +49,7 @@ Die Anwendung basiert auf einer modularen Multi-Interface-Architektur:
 
 ## 👥 Rollen- & Berechtigungsmatrix
 
-| Rolle | Admin-Panel (`/admin`) | Kundenportal (`/portal`) | REST API (`/api`) | Beschreibung |
+| Rolle | Admin-Panel (`/admin`) | Mieterportal (`/portal`) | REST API (`/api`) | Beschreibung |
 |---|---|---|---|---|
 | **Administrator** | Vollzugriff (inkl. User & Audit) | Zugriff | Vollzugriff | Systemadministration |
 | **Sachbearbeiter** | Objekte, Tickets, Finanzen | Zugriff | Management | Hausverwalter & Objektmanager |
@@ -89,7 +89,7 @@ php artisan serve
 ### Standard-Testkonten (nach Seeding)
 
 - **Administrator**: `admin@kundenportal.local` / `password`
-- **Sachbearbeiter**: `manager@kundenportal.local` / `password`
+- **Sachbearbeiter**: `staff@kundenportal.local` / `password`
 - **Eigentümer**: `owner@kundenportal.local` / `password`
 - **Mieter**: `tenant@kundenportal.local` / `password`
 
@@ -109,7 +109,7 @@ vendor/bin/pint --format agent
 
 ### System-Gesundheitsprüfung (Health Check)
 ```powershell
-php artisan kundenportal:health
+php artisan mieterportal:health
 ```
 
 ---
@@ -117,3 +117,4 @@ php artisan kundenportal:health
 ## 📚 API-Dokumentation
 
 Ausführliche curl-Beispiele und JSON-Payloads für alle REST-Endpunkte finden Sie in der [API-Dokumentation](docs/api.md).
+

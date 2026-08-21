@@ -1,4 +1,4 @@
-# ER Diagram — Kundenportal Immobilienverwaltung
+# ER Diagram — Mieterportal Immobilienverwaltung
 
 ```mermaid
 erDiagram

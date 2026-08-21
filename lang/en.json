@@ -40,6 +40,8 @@
     "Aktivität": "Activity",
     "Mein Profil & Sicherheit": "My Profile & Security",
     "Abmelden": "Log Out",
-    "Kundenportal": "Customer Portal",
-    "Customer Portal": "Customer Portal"
+    "Kundenportal": "Tenant Portal",
+    "Customer Portal": "Tenant Portal",
+    "Mieterportal": "Tenant Portal",
+    "Tenant Portal": "Tenant Portal"
 }

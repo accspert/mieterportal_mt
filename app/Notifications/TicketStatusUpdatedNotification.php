@@ -36,7 +36,7 @@ class TicketStatusUpdatedNotification extends Notification
             ->greeting('Hallo '.($notifiable->name ?? '').',')
             ->line('Der Status Ihres Anliegens hat sich geändert auf: **'.$statusText.'**')
             ->line('Ticket: '.$this->ticket->title)
-            ->action('Ticket im Kundenportal ansehen', $url)
+            ->action('Ticket im Mieterportal ansehen', $url)
             ->line('Vielen Dank für Ihre Geduld.');
     }
 

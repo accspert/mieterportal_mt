@@ -245,7 +245,7 @@ class TenantResource extends Resource
                         Forms\Components\TextInput::make('password')
                             ->label('Generiertes Initial-Passwort')
                             ->default(fn (): string => \Illuminate\Support\Str::password(10, true, true, false, false))
-                            ->helperText('Dieses Passwort bitte kopieren und dem Mieter für die Erstanmeldung im Kundenportal übergeben.')
+                            ->helperText('Dieses Passwort bitte kopieren und dem Mieter für die Erstanmeldung im Mieterportal übergeben.')
                             ->required()
                             ->maxLength(255),
                     ])

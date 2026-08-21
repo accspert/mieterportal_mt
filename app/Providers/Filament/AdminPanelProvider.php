@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->brandName('Kundenportal')
+            ->brandName('Mieterportal')
             ->colors([
                 'primary' => '#2563eb',
                 'danger' => '#dc2626',

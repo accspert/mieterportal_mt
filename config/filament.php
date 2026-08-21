@@ -2,7 +2,7 @@
 
 return [
     'brand' => [
-        'name' => env('APP_NAME', 'Kundenportal'),
+        'name' => env('APP_NAME', 'Mieterportal'),
         'logo' => env('FILAMENT_LOGO', '/branding/logo.svg'),
         'favicon' => env('FILAMENT_FAVICON', '/branding/favicon.svg'),
     ],

@@ -1,4 +1,4 @@
-# REST API — Kundenportal
+# REST API — Mieterportal
 
 This API provides endpoints for external clients, SPAs, and mobile apps using **Laravel Sanctum Bearer Tokens**.
 

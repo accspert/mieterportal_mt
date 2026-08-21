@@ -13,14 +13,16 @@ use Spatie\Permission\Models\Role;
 
 class KundenportalHealthCheck extends Command
 {
-    protected $signature = 'kundenportal:health';
+    protected $signature = 'mieterportal:health';
 
-    protected $description = 'Perform a comprehensive health check and diagnostic inspection of the Kundenportal application.';
+    protected $aliases = ['kundenportal:health'];
+
+    protected $description = 'Perform a comprehensive health check and diagnostic inspection of the Mieterportal application.';
 
     public function handle(): int
     {
         $this->info('======================================================');
-        $this->info('       KUNDENPORTAL — SYSTEM HEALTH CHECK            ');
+        $this->info('       MIETERPORTAL — SYSTEM HEALTH CHECK            ');
         $this->info('======================================================');
         $this->newLine();
 

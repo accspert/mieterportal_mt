@@ -18,8 +18,8 @@ class HealthCommandTest extends TestCase
 
     public function test_health_check_command_runs_successfully(): void
     {
-        $this->artisan('kundenportal:health')
-            ->expectsOutputToContain('KUNDENPORTAL — SYSTEM HEALTH CHECK')
+        $this->artisan('mieterportal:health')
+            ->expectsOutputToContain('MIETERPORTAL — SYSTEM HEALTH CHECK')
             ->expectsOutputToContain('1. Datenbank-Verbindung & Status')
             ->expectsOutputToContain('2. Dateispeicher & Berechtigungen')
             ->expectsOutputToContain('3. Rollen- & Berechtigungssystem')

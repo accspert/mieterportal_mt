@@ -64,7 +64,7 @@ class CustomerPortalTest extends TestCase
     {
         $response = $this->get('/portal/login');
         $response->assertStatus(200);
-        $response->assertSee('Kundenportal');
+        $response->assertSee('Mieterportal');
     }
 
     public function test_tenant_can_login_and_access_dashboard(): void
