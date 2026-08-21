@@ -1,0 +1,116 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Property;
+use App\Models\Tenant;
+use App\Models\Ticket;
+use App\Models\Unit;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class TenantTicketIsolationTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(\Database\Seeders\InitialSetupSeeder::class);
+    }
+
+    public function test_tenant_only_sees_their_own_tickets_in_portal(): void
+    {
+        $staff = User::factory()->create();
+        $staff->assignRole('Sachbearbeiter');
+
+        $property = Property::factory()->create(['manager_id' => $staff->id]);
+
+        $tenantUser1 = User::factory()->create();
+        $tenantUser1->assignRole('Mieter');
+        $tenant1 = Tenant::factory()->create(['user_id' => $tenantUser1->id]);
+        $unit1 = Unit::factory()->create(['property_id' => $property->id, 'current_tenant_id' => $tenant1->id]);
+
+        $tenantUser2 = User::factory()->create();
+        $tenantUser2->assignRole('Mieter');
+        $tenant2 = Tenant::factory()->create(['user_id' => $tenantUser2->id]);
+        $unit2 = Unit::factory()->create(['property_id' => $property->id, 'current_tenant_id' => $tenant2->id]);
+
+        $ticket1 = Ticket::factory()->create([
+            'title' => 'Heizung kaputt Mieter 1',
+            'tenant_id' => $tenant1->id,
+            'unit_id' => $unit1->id,
+            'property_id' => $property->id,
+            'created_by' => $tenantUser1->id,
+            'assigned_to' => $staff->id,
+        ]);
+
+        $ticket2 = Ticket::factory()->create([
+            'title' => 'Wasserhahn tropft Mieter 2',
+            'tenant_id' => $tenant2->id,
+            'unit_id' => $unit2->id,
+            'property_id' => $property->id,
+            'created_by' => $tenantUser2->id,
+            'assigned_to' => $staff->id,
+        ]);
+
+        // Tenant 1 checks tickets index
+        $response1 = $this->actingAs($tenantUser1)->get(route('portal.tickets.index'));
+        $response1->assertStatus(200);
+        $response1->assertSee('Heizung kaputt Mieter 1');
+        $response1->assertDontSee('Wasserhahn tropft Mieter 2');
+
+        // Tenant 1 tries to access Ticket 2 directly -> 403
+        $forbiddenResponse = $this->actingAs($tenantUser1)->get(route('portal.tickets.show', $ticket2));
+        $forbiddenResponse->assertStatus(403);
+
+        // Tenant 1 accesses Ticket 1 -> 200
+        $allowedResponse = $this->actingAs($tenantUser1)->get(route('portal.tickets.show', $ticket1));
+        $allowedResponse->assertStatus(200);
+        $allowedResponse->assertSee('Heizung kaputt Mieter 1');
+    }
+
+    public function test_tenant_creating_ticket_automatically_assigns_unit_property_and_manager(): void
+    {
+        $staff = User::factory()->create(['name' => 'Herr Mueller Sachbearbeiter']);
+        $staff->assignRole('Sachbearbeiter');
+
+        $property = Property::factory()->create([
+            'name' => 'Wohnpark Sonnenschein',
+            'manager_id' => $staff->id,
+        ]);
+
+        $tenantUser = User::factory()->create(['name' => 'Anna Mieterin']);
+        $tenantUser->assignRole('Mieter');
+        $tenant = Tenant::factory()->create([
+            'user_id' => $tenantUser->id,
+            'first_name' => 'Anna',
+            'last_name' => 'Mieterin',
+        ]);
+
+        $unit = Unit::factory()->create([
+            'property_id' => $property->id,
+            'number' => '4B',
+            'current_tenant_id' => $tenant->id,
+        ]);
+
+        $response = $this->actingAs($tenantUser)->post(route('portal.tickets.store'), [
+            'title' => 'Fenster schließt nicht richtig',
+            'description' => 'Das Fenster im Schlafzimmer lässt sich nicht mehr verriegeln.',
+            'category' => 'repair',
+            'priority' => 'high',
+            'unit_id' => $unit->id,
+        ]);
+
+        $response->assertRedirect();
+
+        $ticket = Ticket::where('title', 'Fenster schließt nicht richtig')->first();
+        $this->assertNotNull($ticket);
+        $this->assertEquals($property->id, $ticket->property_id);
+        $this->assertEquals($unit->id, $ticket->unit_id);
+        $this->assertEquals($tenant->id, $ticket->tenant_id);
+        $this->assertEquals($tenantUser->id, $ticket->created_by);
+        $this->assertEquals($staff->id, $ticket->assigned_to);
+    }
+}

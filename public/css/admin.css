@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', var(--font-sans);
+
+  --bg-page: #0b0f19;
+  --bg-surface: #131b2e;
+  --bg-surface-elevated: #1a243d;
+  --bg-surface-glass: rgba(26, 36, 61, 0.85);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-color-hover: rgba(255, 255, 255, 0.16);
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+}
+
+body {
+  font-family: var(--font-sans) !important;
+  background-color: var(--bg-page) !important;
+  color: var(--text-main) !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.08) 0px, transparent 50%) !important;
+  background-attachment: fixed !important;
+}
+
+/* Filament Sidebar styling */
+.fi-sidebar,
+aside.fi-sidebar {
+  background-color: var(--bg-surface) !important;
+  border-right: 1px solid var(--border-color) !important;
+}
+
+/* Filament Topbar styling */
+.fi-topbar,
+nav.fi-topbar {
+  background-color: rgba(19, 27, 46, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Filament Cards, Panels, Sections */
+.fi-section,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat,
+.fi-wi-chart,
+.fi-card {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 14px !important;
+}
+
+/* Filament Tables */
+.fi-ta-table {
+  background-color: var(--bg-surface) !important;
+}
+
+.fi-ta-header,
+.fi-ta-content {
+  border-color: var(--border-color) !important;
+}
+
+.fi-ta-row:hover {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Filament Headings */
+h1, h2, h3, h4, .fi-header-heading {
+  font-family: var(--font-heading) !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

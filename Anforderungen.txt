@@ -1,0 +1,450 @@
+Du bist ein Senior Software Architect und Senior Laravel Developer.
+
+Entwickle eine professionelle Webanwendung für Immobilienverwaltungen als Kundenportal.
+
+Stack:
+
+- Laravel 12
+- PHP 8.4
+- Filament 4
+- Livewire
+- Eigenes CSS Design und lokale Datei
+- MySQL
+- Laravel Queue
+- Laravel Notifications
+- Spatie Permission
+- Laravel Policies
+- REST API
+- Pest Tests
+
+Die Anwendung soll produktionsreif, modular und erweiterbar aufgebaut werden.
+
+Architektur:
+
+- Clean Architecture
+- Service Layer
+- Repository Pattern nur wenn sinnvoll
+- Form Requests
+- Policies
+- Events & Listeners
+- Jobs für Hintergrundprozesse
+- DTOs wenn sinnvoll
+- Soft Deletes
+- Activity Log
+- Audit Trail
+- Mehrsprachigkeit (DE/EN)
+
+Die Anwendung ist NICHT Multi-Tenant.
+
+Jeder Kunde erhält seine eigene Installation.
+
+────────────────────────────
+
+Benutzerrollen
+
+Administrator
+
+- komplette Verwaltung
+
+Sachbearbeiter
+
+- verwaltet Objekte
+- verwaltet Mieter
+- bearbeitet Tickets
+- lädt Dokumente hoch
+
+Eigentümer
+
+- sieht nur seine Immobilien
+- sieht Dokumente
+- sieht Abrechnungen
+- erhält Nachrichten
+
+Mieter
+
+- sieht nur eigene Wohnung
+- kann Tickets eröffnen
+- sieht Dokumente
+- sieht Rechnungen
+- lädt Dateien hoch
+
+────────────────────────────
+
+Dashboard
+
+Je Rolle individuelles Dashboard.
+
+Administrator
+
+- Anzahl Objekte
+- Anzahl Wohnungen
+- offene Tickets
+- neue Nachrichten
+- ausstehende Dokumente
+- aktuelle Aufgaben
+
+Eigentümer
+
+- Immobilienübersicht
+- offene Meldungen
+- letzte Dokumente
+- Nebenkosten
+- Termine
+
+Mieter
+
+- Mietvertrag
+- letzte Dokumente
+- offene Tickets
+- nächste Termine
+- Rechnungen
+
+────────────────────────────
+
+Objektverwaltung
+
+Objekte
+
+- Adresse
+- Bilder
+- Beschreibung
+- Dokumente
+- Eigentümer
+- Ansprechpartner
+
+Wohnungen
+
+- Nummer
+- Etage
+- Fläche
+- Zimmer
+- Status
+- aktueller Mieter
+
+────────────────────────────
+
+Mieterverwaltung
+
+Mieter
+
+- Stammdaten
+- Kontakt
+- Mietbeginn
+- Mietende
+- Dokumente
+- Verträge
+
+────────────────────────────
+
+Dokumentenmanagement
+
+Ordnerstruktur
+
+Versionierung
+
+Drag & Drop Upload
+
+PDF Vorschau
+
+Berechtigungen
+
+Download
+
+Suche
+
+Kategorien
+
+Dokumenttypen
+
+Beispiele
+
+- Mietvertrag
+- Nebenkostenabrechnung
+- Übergabeprotokoll
+- Hausordnung
+- Energieausweis
+- Versicherung
+- Protokolle
+
+────────────────────────────
+
+Ticketsystem
+
+Mieter können Schäden melden.
+
+Ticket
+
+- Titel
+- Beschreibung
+- Kategorie
+- Priorität
+- Status
+- Bilder
+- Dateien
+
+Workflow
+
+Offen
+
+↓
+
+In Bearbeitung
+
+↓
+
+Warten
+
+↓
+
+Erledigt
+
+↓
+
+Archiviert
+
+Kommentare
+
+Interne Notizen
+
+Benachrichtigungen
+
+────────────────────────────
+
+Nachrichten
+
+Interne Kommunikation
+
+Chat zwischen
+
+- Verwaltung
+- Eigentümer
+- Mieter
+
+Anhänge
+
+Lesebestätigung
+
+────────────────────────────
+
+Aufgaben
+
+Sachbearbeiter erhalten Aufgaben.
+
+- Titel
+- Beschreibung
+- Fällig
+- Verantwortlich
+- Status
+
+────────────────────────────
+
+Termine
+
+Besichtigung
+
+Wohnungsübergabe
+
+Handwerker
+
+Wartung
+
+Kalenderansicht
+
+────────────────────────────
+
+Rechnungen
+
+Mieter
+
+- Mietrechnungen
+- Nebenkosten
+
+Eigentümer
+
+- Abrechnungen
+- Ausschüttungen
+
+Download
+
+PDF
+
+────────────────────────────
+
+Dateiupload
+
+Bilder
+
+PDF
+
+Office
+
+ZIP
+
+Maximale Größe konfigurierbar.
+
+────────────────────────────
+
+Suche
+
+Globale Volltextsuche über
+
+- Objekte
+- Wohnungen
+- Personen
+- Dokumente
+- Tickets
+
+────────────────────────────
+
+Benachrichtigungen
+
+E-Mail
+
+In-App
+
+Browser
+
+Bei
+
+- neuem Ticket
+- neuer Nachricht
+- neuem Dokument
+- Aufgabe fällig
+- Terminänderung
+
+────────────────────────────
+
+Adminbereich
+
+Benutzer
+
+Rollen
+
+Rechte
+
+Aktivitätsprotokoll
+
+Systemeinstellungen
+
+E-Mail
+
+Branding
+
+Logo
+
+Farben
+
+SMTP
+
+Backups
+
+────────────────────────────
+
+Sicherheit
+
+CSRF
+
+Rate Limiting
+
+2FA
+
+Passwort Reset
+
+Policies
+
+Rollen
+
+Berechtigungen
+
+Audit Log
+
+────────────────────────────
+
+Design
+
+Modern
+
+Minimalistisch
+
+Professionell
+
+Responsive
+
+Desktop First
+
+────────────────────────────
+
+API
+
+REST API
+
+Authentifizierung
+
+Laravel Sanctum
+
+Endpoints für
+
+- Objekte
+- Wohnungen
+- Dokumente
+- Tickets
+- Nachrichten
+
+────────────────────────────
+
+KI-Funktionen
+
+Dokumentenzusammenfassung
+
+Automatische Ticket-Kategorisierung
+
+Antwortvorschläge
+
+Suche über natürliche Sprache
+
+Zusammenfassung langer Nachrichten
+
+────────────────────────────
+
+Zukünftige Module
+
+Handwerkerportal
+
+Digitale Signaturen
+
+Online-Zahlungen
+
+DATEV
+
+Abacus
+
+SMS
+
+WhatsApp
+
+Mobile App
+
+────────────────────────────
+
+Arbeite iterativ.
+
+Beginne mit der Datenbankmodellierung.
+
+Erstelle anschließend:
+
+1. ER-Diagramm
+2. Datenbankstruktur
+3. Migrationen
+4. Modelle
+5. Beziehungen
+6. Seeder
+7. Factories
+8. Policies
+9. Filament Resources
+10. Livewire-Komponenten
+11. Services
+12. Tests
+
+Erzeuge niemals Platzhaltercode.
+
+Der Code soll produktionsreif, PSR-konform, performant und vollständig implementiert sein.
