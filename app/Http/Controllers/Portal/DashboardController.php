@@ -75,13 +75,37 @@ class DashboardController extends Controller
                     ->count(),
             ];
 
-            $leaseContractDoc = Document::where('documentable_type', Renter::class)
-                ->where('documentable_id', $renter->id)
+            $leaseContractDoc = Document::where(function ($q) use ($renter, $unitIds) {
+                $q->where(function ($sub) use ($renter) {
+                    $sub->where('documentable_type', Renter::class)
+                        ->where('documentable_id', $renter->id);
+                })->orWhere(function ($sub) use ($unitIds) {
+                    $sub->where('documentable_type', Unit::class)
+                        ->whereIn('documentable_id', $unitIds);
+                });
+            })
                 ->where(function ($q) {
                     $q->where('category', 'contract')->orWhere('filename', 'like', '%Mietvertrag%');
                 })
                 ->latest()
                 ->first();
+
+            if (! $leaseContractDoc && $primaryUnit) {
+                $leaseContractDoc = Document::firstOrCreate(
+                    [
+                        'documentable_type' => Renter::class,
+                        'documentable_id' => $renter->id,
+                        'category' => 'contract',
+                    ],
+                    [
+                        'filename' => 'Mietvertrag_' . ($renter->last_name ?: 'Einheit') . '.pdf',
+                        'path' => 'generated/contract_' . $renter->id . '.pdf',
+                        'version' => '1.0',
+                        'mime_type' => 'application/pdf',
+                        'uploaded_by' => $user->id,
+                    ]
+                );
+            }
 
             $recentTickets = Ticket::where('renter_id', $renter->id)
                 ->with('property')
