@@ -16,7 +16,7 @@ class Invoice extends Model
 
     protected $fillable = [
         'invoice_number',
-        'tenant_id',
+        'renter_id',
         'owner_id',
         'unit_id',
         'amount',
@@ -46,9 +46,14 @@ class Invoice extends Model
         ];
     }
 
+    public function renter(): BelongsTo
+    {
+        return $this->belongsTo(Renter::class, 'renter_id');
+    }
+
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->renter();
     }
 
     public function owner(): BelongsTo

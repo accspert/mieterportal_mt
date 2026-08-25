@@ -56,6 +56,6 @@ class PropertyPolicy
 
     public function forceDelete(User $user, Property $property): bool
     {
-        return $user->hasRole('Administrator');
+        return $this->create($user);
     }
 }

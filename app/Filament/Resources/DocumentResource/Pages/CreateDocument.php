@@ -4,6 +4,7 @@ namespace App\Filament\Resources\DocumentResource\Pages;
 
 use App\Filament\Resources\DocumentResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Storage;
 
 class CreateDocument extends CreateRecord
 {
@@ -13,9 +14,9 @@ class CreateDocument extends CreateRecord
     {
         $data['uploaded_by'] = auth()->id();
 
-        if (! empty($data['path']) && \Illuminate\Support\Facades\Storage::disk('public')->exists($data['path'])) {
-            $data['size'] = \Illuminate\Support\Facades\Storage::disk('public')->size($data['path']);
-            $data['mime_type'] = \Illuminate\Support\Facades\Storage::disk('public')->mimeType($data['path']) ?? 'application/pdf';
+        if (! empty($data['path']) && Storage::disk('public')->exists($data['path'])) {
+            $data['size'] = Storage::disk('public')->size($data['path']);
+            $data['mime_type'] = Storage::disk('public')->mimeType($data['path']) ?? 'application/pdf';
         } else {
             $data['mime_type'] = $data['mime_type'] ?? 'application/pdf';
         }

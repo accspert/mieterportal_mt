@@ -16,7 +16,7 @@ return new class extends Migration
             $table->decimal('area', 8, 2)->nullable();
             $table->unsignedTinyInteger('rooms')->nullable();
             $table->enum('status', ['vacant', 'occupied', 'maintenance', 'inactive'])->default('vacant');
-            $table->foreignId('current_tenant_id')->nullable()->constrained('tenants')->nullOnDelete();
+            $table->foreignId('current_renter_id')->nullable()->constrained('renters')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -23,7 +23,8 @@ class UpdateInvoiceRequest extends FormRequest
 
         return [
             'invoice_number' => 'sometimes|required|string|max:255|unique:invoices,invoice_number,'.$invoiceId,
-            'tenant_id' => 'nullable|exists:tenants,id',
+            'renter_id' => 'nullable|exists:renters,id',
+            'tenant_id' => 'nullable|exists:renters,id',
             'owner_id' => 'nullable|exists:owners,id',
             'unit_id' => 'nullable|exists:units,id',
             'amount' => 'sometimes|required|numeric|min:0',

@@ -4,18 +4,24 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Models\Invoice;
+use App\Models\Unit;
 use App\Services\CsvExportService;
-use App\Services\InvoicePdfService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -65,9 +71,9 @@ class InvoiceResource extends Resource
         return [
             'invoice_number',
             'notes',
-            'tenant.first_name',
-            'tenant.last_name',
-            'tenant.email',
+            'renter.first_name',
+            'renter.last_name',
+            'renter.email',
             'owner.first_name',
             'owner.last_name',
             'owner.company_name',
@@ -87,7 +93,7 @@ class InvoiceResource extends Resource
         return [
             'Betrag' => number_format($record->amount, 2, ',', '.').' €',
             'Status' => $record->status,
-            'Empfänger' => $record->tenant ? "{$record->tenant->first_name} {$record->tenant->last_name}" : ($record->owner ? ($record->owner->company_name ?: "{$record->owner->first_name} {$record->owner->last_name}") : '-'),
+            'Empfänger' => $record->renter ? "{$record->renter->first_name} {$record->renter->last_name}" : ($record->owner ? ($record->owner->company_name ?: "{$record->owner->first_name} {$record->owner->last_name}") : '-'),
         ];
     }
 
@@ -100,8 +106,8 @@ class InvoiceResource extends Resource
                 ->maxLength(255)
                 ->unique(Invoice::class, 'invoice_number', ignoreRecord: true),
 
-            Forms\Components\Select::make('tenant_id')
-                ->relationship('tenant', 'first_name')
+            Forms\Components\Select::make('renter_id')
+                ->relationship('renter', 'first_name')
                 ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->first_name} {$record->last_name}")
                 ->searchable()
                 ->preload()
@@ -124,7 +130,7 @@ class InvoiceResource extends Resource
                 )
                 ->getOptionLabelFromRecordUsing(fn ($record) => "Einheit {$record->number}".($record->property ? " – Liegenschaft {$record->property->name} ({$record->property->city})" : ''))
                 ->getSearchResultsUsing(function (string $search): array {
-                    return \App\Models\Unit::query()
+                    return Unit::query()
                         ->with('property')
                         ->where(function ($q) use ($search) {
                             $q->where('number', 'like', "%{$search}%")
@@ -142,7 +148,7 @@ class InvoiceResource extends Resource
                         ->toArray();
                 })
                 ->getOptionLabelUsing(function ($value): ?string {
-                    $unit = \App\Models\Unit::with('property')->find($value);
+                    $unit = Unit::with('property')->find($value);
 
                     return $unit ? "Einheit {$unit->number}".($unit->property ? " – Liegenschaft {$unit->property->name} ({$unit->property->city})" : '') : null;
                 })
@@ -199,8 +205,8 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('recipient')
                     ->label('Empfänger / Partei')
                     ->state(function (Invoice $record): string {
-                        if ($record->tenant) {
-                            return "Mieter: {$record->tenant->first_name} {$record->tenant->last_name}";
+                        if ($record->renter) {
+                            return "Mieter: {$record->renter->first_name} {$record->renter->last_name}";
                         }
                         if ($record->owner) {
                             return 'Eigentümer: '.($record->owner->company_name ?: "{$record->owner->first_name} {$record->owner->last_name}");
@@ -210,7 +216,7 @@ class InvoiceResource extends Resource
                     })
                     ->searchable(query: function (Builder $query, string $search): Builder {
                         return $query->where(function (Builder $q) use ($search) {
-                            $q->whereHas('tenant', function (Builder $tQuery) use ($search) {
+                            $q->whereHas('renter', function (Builder $tQuery) use ($search) {
                                 $tQuery->where('first_name', 'like', "%{$search}%")
                                     ->orWhere('last_name', 'like', "%{$search}%")
                                     ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
@@ -225,9 +231,9 @@ class InvoiceResource extends Resource
                         });
                     })
                     ->sortable(query: function (Builder $query, string $direction): Builder {
-                        return $query->leftJoin('tenants', 'invoices.tenant_id', '=', 'tenants.id')
+                        return $query->leftJoin('renters', 'invoices.renter_id', '=', 'renters.id')
                             ->leftJoin('owners', 'invoices.owner_id', '=', 'owners.id')
-                            ->orderByRaw("COALESCE(tenants.last_name, owners.last_name, owners.company_name) {$direction}")
+                            ->orderByRaw("COALESCE(renters.last_name, owners.last_name, owners.company_name) {$direction}")
                             ->select('invoices.*');
                     }),
                 Tables\Columns\TextColumn::make('unit.number')->label('Einheit')->searchable()->sortable()->default('-'),
@@ -284,6 +290,7 @@ class InvoiceResource extends Resource
                     ->getOptionLabelFromRecordUsing(fn ($record) => "Einheit {$record->number}".($record->property ? " – {$record->property->name}" : ''))
                     ->searchable()
                     ->preload(),
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->headerActions([
                 Action::make('exportCsv')
@@ -316,6 +323,9 @@ class InvoiceResource extends Resource
                     ->url(fn (Invoice $record): string => route('portal.invoices.download', $record))
                     ->openUrlInNewTab(),
                 EditAction::make(),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 BulkAction::make('markAsPaid')
@@ -351,6 +361,8 @@ class InvoiceResource extends Resource
                         return $exportService->streamCsv('rechnungen_auswahl_'.date('Y-m-d').'.csv', $headers, $rows);
                     }),
                 DeleteBulkAction::make(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ]);
     }
 

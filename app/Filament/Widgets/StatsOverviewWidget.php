@@ -17,7 +17,7 @@ class StatsOverviewWidget extends BaseWidget
     {
         $totalProperties = Property::count();
         $totalUnits = Unit::count();
-        $occupiedUnits = Unit::whereNotNull('current_tenant_id')->count();
+        $occupiedUnits = Unit::whereNotNull('current_renter_id')->count();
         $occupancyRate = $totalUnits > 0 ? round(($occupiedUnits / $totalUnits) * 100, 1) : 0;
 
         $openTickets = Ticket::whereIn('status', ['open', 'in_progress', 'waiting'])->count();

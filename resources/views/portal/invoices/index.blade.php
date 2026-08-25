@@ -122,7 +122,7 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <div style="font-weight: 700; color: #fff; font-size: 14px; letter-spacing: -0.01em;">
+                                    <div style="font-weight: 700; color: var(--text-main); font-size: 14px; letter-spacing: -0.01em;">
                                         {{ $inv->invoice_number }}
                                     </div>
                                     @if($displayTitle)
@@ -139,7 +139,7 @@
                         </td>
                         <td>
                             @if($inv->unit)
-                                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); font-size: 12px; color: #e2e8f0;">
+                                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,0.04); border: 1px solid var(--border-color); font-size: 12px; color: var(--text-main); font-weight: 600;">
                                     <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 12px; height: 12px; color: var(--text-muted);">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                                     </svg>
@@ -150,18 +150,18 @@
                             @endif
                         </td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{ $isOverdue ? '#f87171' : 'var(--text-muted)' }};">
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{ $isOverdue ? '#ef4444' : 'var(--text-muted)' }}; font-weight: 500;">
                                 <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 14px; height: 14px;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.253 18.75A2.25 2.25 0 014.5 21.75h15a2.25 2.25 0 002.25-2.25V7.5A2.25 2.25 0 0019.5 5.25H4.5A2.25 2.25 0 002.25 7.5v12a2.25 2.25 0 002.25 2.25z" />
                                 </svg>
                                 <span>{{ $inv->due_date ? $inv->due_date->format('d.m.Y') : '-' }}</span>
                             </div>
                             @if($isOverdue)
-                                <div style="font-size: 10px; color: #f87171; font-weight: 600; margin-top: 2px;">Fälligkeit überschritten</div>
+                                <div style="font-size: 10px; color: #dc2626; font-weight: 700; margin-top: 2px;">Fälligkeit überschritten</div>
                             @endif
                         </td>
                         <td>
-                            <div style="font-weight: 700; color: #fff; font-size: 15px;">
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 15px;">
                                 {{ number_format($inv->amount, 2, ',', '.') }} €
                             </div>
                         </td>

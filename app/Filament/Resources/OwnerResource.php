@@ -5,12 +5,18 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\OwnerResource\Pages;
 use App\Models\Owner;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
@@ -145,12 +151,19 @@ class OwnerResource extends Resource
                 Tables\Columns\TextColumn::make('properties_count')->counts('properties')->label('Liegenschaften'),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
-            ->filters([])
+            ->filters([
+                TrashedFilter::make(),
+            ])
             ->actions([
                 EditAction::make(),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 DeleteBulkAction::make(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ]);
     }
 

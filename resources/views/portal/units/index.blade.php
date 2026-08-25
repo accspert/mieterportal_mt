@@ -24,22 +24,22 @@
                     <span class="badge badge-resolved">Aktiv</span>
                 </div>
 
-                <div style="background: rgba(0,0,0,0.25); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+                <div class="sub-card" style="border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
                     <div>
-                        <span style="color: var(--text-muted); display: block; font-size: 11px; text-transform: uppercase;">Etage</span>
-                        <strong style="color: #fff;">{{ $unit->floor ?? 'EG' }}</strong>
+                        <span style="color: var(--text-muted); display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;">Etage</span>
+                        <strong style="color: var(--text-main); font-weight: 700;">{{ $unit->floor ?? 'EG' }}</strong>
                     </div>
                     <div>
-                        <span style="color: var(--text-muted); display: block; font-size: 11px; text-transform: uppercase;">Wohnfläche</span>
-                        <strong style="color: #fff;">{{ $unit->area ? $unit->area . ' m²' : '-' }}</strong>
+                        <span style="color: var(--text-muted); display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;">Wohnfläche</span>
+                        <strong style="color: var(--text-main); font-weight: 700;">{{ $unit->area ? $unit->area . ' m²' : '-' }}</strong>
                     </div>
                     <div>
-                        <span style="color: var(--text-muted); display: block; font-size: 11px; text-transform: uppercase;">Zimmer</span>
-                        <strong style="color: #fff;">{{ $unit->rooms ?? '-' }}</strong>
+                        <span style="color: var(--text-muted); display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;">Zimmer</span>
+                        <strong style="color: var(--text-main); font-weight: 700;">{{ $unit->rooms ?? '-' }}</strong>
                     </div>
                     <div>
-                        <span style="color: var(--text-muted); display: block; font-size: 11px; text-transform: uppercase;">Einzug</span>
-                        <strong style="color: #fff;">{{ $tenant->move_in ? date('d.m.Y', strtotime($tenant->move_in)) : 'Vertrag aktiv' }}</strong>
+                        <span style="color: var(--text-muted); display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;">Einzug</span>
+                        <strong style="color: var(--text-main); font-weight: 700;">{{ $tenant->move_in ? date('d.m.Y', strtotime($tenant->move_in)) : 'Vertrag aktiv' }}</strong>
                     </div>
                 </div>
 

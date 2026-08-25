@@ -26,3 +26,6 @@ cookies.txt
 route_list.txt
 routes.txt
 login.html
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/tenant_*

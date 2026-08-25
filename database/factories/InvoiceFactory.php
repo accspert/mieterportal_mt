@@ -13,7 +13,7 @@ class InvoiceFactory extends Factory
     {
         return [
             'invoice_number' => 'INV-'.strtoupper(fake()->bothify('####-????')),
-            'tenant_id' => null,
+            'renter_id' => null,
             'owner_id' => null,
             'unit_id' => null,
             'amount' => fake()->randomFloat(2, 50, 2500),

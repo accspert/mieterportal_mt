@@ -9,7 +9,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value">{{ $stats['total_properties'] }}</div>
+            <div class="stat-value">{{ $stats['total_properties'] ?? 0 }}</div>
             <div class="stat-label">Liegenschaften</div>
         </div>
     </div>
@@ -21,8 +21,8 @@
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value">{{ $stats['occupied_units'] }} / {{ $stats['total_units'] }}</div>
-            <div class="stat-label">Vermietungsquote ({{ $stats['occupancy_rate'] }}%)</div>
+            <div class="stat-value">{{ $stats['occupied_units'] ?? 0 }} / {{ $stats['total_units'] ?? 0 }}</div>
+            <div class="stat-label">Vermietungsquote ({{ $stats['occupancy_rate'] ?? 0 }}%)</div>
         </div>
     </div>
 
@@ -33,7 +33,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value">{{ $stats['active_tickets'] }}</div>
+            <div class="stat-value">{{ $stats['active_tickets'] ?? 0 }}</div>
             <div class="stat-label">Offene Meldungen</div>
         </div>
     </div>
@@ -45,7 +45,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value">{{ $stats['open_invoices'] }}</div>
+            <div class="stat-value">{{ $stats['open_invoices'] ?? 0 }}</div>
             <div class="stat-label">Abrechnungen / Belege</div>
         </div>
     </div>
@@ -71,27 +71,27 @@
             @foreach($properties as $property)
                 @php
                     $unitCount = $property->units->count();
-                    $occupied = $property->units->whereNotNull('current_tenant_id')->count();
+                    $occupied = $property->units->filter(fn($u) => $u->current_renter_id || $u->current_tenant_id)->count();
                     $rate = $unitCount > 0 ? round(($occupied / $unitCount) * 100) : 0;
                 @endphp
-                <div style="padding: 16px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; flex-direction: column; justify-content: space-between;">
+                <div class="sub-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-                            <h3 style="font-size: 16px; font-weight: 700; color: #fff;">{{ $property->name }}</h3>
-                            <span class="badge" style="background: rgba(37, 99, 235, 0.2); color: #60a5fa;">
+                            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main);">{{ $property->name }}</h3>
+                            <span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #2563eb; font-weight: 700;">
                                 {{ $unitCount }} {{ $unitCount === 1 ? 'Einheit' : 'Einheiten' }}
                             </span>
                         </div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 14px;">
                             {{ $property->street }}, {{ $property->postal_code }} {{ $property->city }}
                         </div>
                     </div>
 
-                    <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-size: 12px; color: var(--text-muted);">
-                            Vermietet: <strong style="color: #fff;">{{ $occupied }} / {{ $unitCount }}</strong> ({{ $rate }}%)
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
+                            Vermietet: <strong style="color: var(--text-main); font-weight: 700;">{{ $occupied }} / {{ $unitCount }}</strong> ({{ $rate }}%)
                         </div>
-                        <div style="width: 80px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                        <div style="width: 80px; height: 6px; background: rgba(148, 163, 184, 0.2); border-radius: 3px; overflow: hidden;">
                             <div style="height: 100%; width: {{ $rate }}%; background: #16a34a; border-radius: 3px;"></div>
                         </div>
                     </div>
@@ -120,10 +120,10 @@
         @else
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 @foreach($recentTickets as $ticket)
-                    <a href="{{ route('portal.tickets.show', $ticket) }}" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: var(--radius-md); text-decoration: none; color: inherit;">
+                    <a href="{{ route('portal.tickets.show', $ticket) }}" class="sub-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; text-decoration: none; color: inherit;">
                         <div>
-                            <div style="font-weight: 600; font-size: 14px; margin-bottom: 2px;">{{ $ticket->title }}</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: var(--text-main);">{{ $ticket->title }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
                                 {{ $ticket->property->name ?? 'Objekt' }} &bull; Mieter: {{ $ticket->tenant ? "{$ticket->tenant->first_name} {$ticket->tenant->last_name}" : 'Allgemein' }}
                             </div>
                         </div>
@@ -161,15 +161,15 @@
         @else
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 @foreach($recentInvoices as $invoice)
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <div class="sub-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px;">
                         <div>
-                            <div style="font-weight: 600; font-size: 14px; margin-bottom: 2px;">{{ $invoice->invoice_number }}</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: var(--text-main);">{{ $invoice->invoice_number }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
                                 Datum: {{ $invoice->issue_date ? $invoice->issue_date->format('d.m.Y') : '-' }} &bull; {{ number_format($invoice->amount, 2, ',', '.') }} €
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="badge" style="background: {{ $invoice->status === 'paid' ? 'rgba(22, 163, 74, 0.2)' : 'rgba(217, 119, 6, 0.2)' }}; color: {{ $invoice->status === 'paid' ? '#4ade80' : '#f59e0b' }};">
+                            <span class="badge" style="background: {{ $invoice->status === 'paid' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(217, 119, 6, 0.15)' }}; color: {{ $invoice->status === 'paid' ? '#15803d' : '#b45309' }}; font-weight: 700;">
                                 {{ $invoice->status === 'paid' ? 'Abgerechnet' : 'In Prüfung' }}
                             </span>
                             <a href="{{ route('portal.invoices.download', $invoice) }}" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;">
@@ -202,16 +202,16 @@
         @else
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 @foreach($recentDocuments as $doc)
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <div class="sub-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #34d399; display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #059669; display: flex; align-items: center; justify-content: center; font-weight: 700;">
                                 <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                                 </svg>
                             </div>
                             <div>
-                                <div style="font-weight: 600; font-size: 13px;">{{ $doc->filename }}</div>
-                                <div style="font-size: 11px; color: var(--text-muted);">
+                                <div style="font-weight: 700; font-size: 13px; color: var(--text-main);">{{ $doc->filename }}</div>
+                                <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
                                     {{ ucfirst($doc->category ?? 'Objektunterlage') }} &bull; {{ $doc->created_at->format('d.m.Y') }}
                                 </div>
                             </div>

@@ -2,17 +2,17 @@
 
 <!-- Apartment & Lease Contract Hero Card -->
 @if($primaryUnit)
-<div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(59, 130, 246, 0.25);">
+<div class="card hero-unit-card" style="margin-bottom: 24px;">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
         <div>
-            <div style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.15); color: #2563eb; font-size: 12px; font-weight: 700; margin-bottom: 8px;">
                 <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                 </svg>
                 Ihre Mieteinheit
             </div>
-            <h2 style="font-size: 22px; margin-bottom: 4px; color: #fff;">{{ $primaryUnit->property->name ?? 'Mietobjekt' }} — {{ $primaryUnit->number }}</h2>
-            <div style="color: var(--text-muted); font-size: 13px;">
+            <h2 style="font-size: 22px; margin-bottom: 4px; color: var(--text-main);">{{ $primaryUnit->property->name ?? 'Mietobjekt' }} — {{ $primaryUnit->number }}</h2>
+            <div style="color: var(--text-muted); font-size: 13px; font-weight: 500;">
                 {{ $primaryUnit->property->street ?? '' }}, {{ $primaryUnit->property->postal_code ?? '' }} {{ $primaryUnit->property->city ?? '' }}
             </div>
         </div>
@@ -27,22 +27,22 @@
         @endif
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
         <div>
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Etage</div>
-            <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ $primaryUnit->floor ?: 'Erdgeschoss' }}</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Etage</div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">{{ $primaryUnit->floor ?: 'Erdgeschoss' }}</div>
         </div>
         <div>
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Wohnfläche</div>
-            <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ $primaryUnit->area ? number_format($primaryUnit->area, 1, ',', '.') . ' m²' : '-' }}</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Wohnfläche</div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">{{ $primaryUnit->area ? number_format($primaryUnit->area, 1, ',', '.') . ' m²' : '-' }}</div>
         </div>
         <div>
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Zimmer</div>
-            <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ $primaryUnit->rooms ?: '-' }}</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Zimmer</div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">{{ $primaryUnit->rooms ?: '-' }}</div>
         </div>
         <div>
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Mietbeginn</div>
-            <div style="font-size: 15px; font-weight: 600; color: #fff;">{{ $tenant->move_in ? \Carbon\Carbon::parse($tenant->move_in)->format('d.m.Y') : 'Unbefristet' }}</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Mietbeginn</div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">{{ ($tenant && $tenant->move_in) ? \Carbon\Carbon::parse($tenant->move_in)->format('d.m.Y') : 'Unbefristet' }}</div>
         </div>
     </div>
 </div>
@@ -57,7 +57,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value">{{ $stats['active_tickets'] }}</div>
+            <div class="stat-value">{{ $stats['active_tickets'] ?? 0 }}</div>
             <div class="stat-label">Offene Tickets</div>
         </div>
     </div>
@@ -69,7 +69,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value">{{ $stats['unread_messages'] }}</div>
+            <div class="stat-value">{{ $stats['unread_messages'] ?? 0 }}</div>
             <div class="stat-label">Ungelesene Nachrichten</div>
         </div>
     </div>
@@ -81,7 +81,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value">{{ $stats['documents_count'] }}</div>
+            <div class="stat-value">{{ $stats['documents_count'] ?? 0 }}</div>
             <div class="stat-label">Dokumente verfügbar</div>
         </div>
     </div>
@@ -93,7 +93,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value">{{ $stats['open_invoices'] }}</div>
+            <div class="stat-value">{{ $stats['open_invoices'] ?? 0 }}</div>
             <div class="stat-label">Offene Rechnungen</div>
         </div>
     </div>
@@ -121,10 +121,10 @@
         @else
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 @foreach($recentTickets as $ticket)
-                    <a href="{{ route('portal.tickets.show', $ticket) }}" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: var(--radius-md); text-decoration: none; color: inherit;">
+                    <a href="{{ route('portal.tickets.show', $ticket) }}" class="sub-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; text-decoration: none; color: inherit;">
                         <div>
-                            <div style="font-weight: 600; font-size: 14px; margin-bottom: 2px;">{{ $ticket->title }}</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: var(--text-main);">{{ $ticket->title }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
                                 Kategorie: {{ ucfirst($ticket->category) }} &bull; {{ $ticket->created_at->diffForHumans() }}
                             </div>
                         </div>
@@ -162,15 +162,15 @@
         @else
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 @foreach($recentInvoices as $invoice)
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <div class="sub-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px;">
                         <div>
-                            <div style="font-weight: 600; font-size: 14px; margin-bottom: 2px;">{{ $invoice->invoice_number }}</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: var(--text-main);">{{ $invoice->invoice_number }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
                                 Fällig: {{ $invoice->due_date ? $invoice->due_date->format('d.m.Y') : '-' }} &bull; {{ number_format($invoice->amount, 2, ',', '.') }} €
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="badge" style="background: {{ $invoice->status === 'paid' ? 'rgba(22, 163, 74, 0.2)' : 'rgba(217, 119, 6, 0.2)' }}; color: {{ $invoice->status === 'paid' ? '#4ade80' : '#f59e0b' }};">
+                            <span class="badge" style="background: {{ $invoice->status === 'paid' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(217, 119, 6, 0.15)' }}; color: {{ $invoice->status === 'paid' ? '#15803d' : '#b45309' }}; font-weight: 700;">
                                 {{ $invoice->status === 'paid' ? 'Bezahlt' : 'Ausstehend' }}
                             </span>
                             <a href="{{ route('portal.invoices.download', $invoice) }}" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;">
@@ -203,16 +203,16 @@
         @else
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 @foreach($recentDocuments as $doc)
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <div class="sub-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(59, 130, 246, 0.15); color: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: 700;">
                                 <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                                 </svg>
                             </div>
                             <div>
-                                <div style="font-weight: 600; font-size: 13px;">{{ $doc->filename }}</div>
-                                <div style="font-size: 11px; color: var(--text-muted);">
+                                <div style="font-weight: 700; font-size: 13px; color: var(--text-main);">{{ $doc->filename }}</div>
+                                <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
                                     {{ ucfirst($doc->category ?? 'Allgemein') }} &bull; {{ $doc->created_at->format('d.m.Y') }}
                                 </div>
                             </div>

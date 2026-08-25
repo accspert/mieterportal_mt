@@ -21,7 +21,8 @@ class StoreUnitRequest extends FormRequest
             'area' => 'nullable|numeric',
             'rooms' => 'nullable|integer',
             'status' => 'nullable|in:vacant,occupied,maintenance,inactive',
-            'current_tenant_id' => 'nullable|exists:tenants,id',
+            'current_renter_id' => 'nullable|exists:renters,id',
+            'current_tenant_id' => 'nullable|exists:renters,id',
         ];
     }
 }

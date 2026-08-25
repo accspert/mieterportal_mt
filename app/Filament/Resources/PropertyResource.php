@@ -5,13 +5,20 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PropertyResource\Pages;
 use App\Filament\Resources\PropertyResource\RelationManagers\UnitsRelationManager;
 use App\Models\Property;
+use App\Models\User;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
@@ -93,7 +100,7 @@ class PropertyResource extends Resource
 
             Forms\Components\Select::make('manager_id')
                 ->relationship('manager', 'name')
-                ->options(fn () => \App\Models\User::role(['Sachbearbeiter', 'Administrator'])->pluck('name', 'id'))
+                ->options(fn () => User::role(['Sachbearbeiter', 'Administrator'])->pluck('name', 'id'))
                 ->searchable()
                 ->preload()
                 ->label('Zuständiger Sachbearbeiter'),
@@ -126,12 +133,18 @@ class PropertyResource extends Resource
                 Tables\Filters\SelectFilter::make('manager_id')
                     ->label('Sachbearbeiter')
                     ->relationship('manager', 'name'),
+                TrashedFilter::make(),
             ])
             ->actions([
                 EditAction::make(),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 DeleteBulkAction::make(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ]);
     }
 

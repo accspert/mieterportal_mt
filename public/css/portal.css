@@ -53,6 +53,7 @@
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-faint: #64748b;
+  --text-color: #f8fafc;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
@@ -64,6 +65,274 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+}
+
+/* ==========================================================================
+   PORTAL LIGHT MODE
+   ========================================================================== */
+html[data-theme="light"],
+html.light,
+body.light {
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f1f5f9;
+  --bg-surface-glass: rgba(255, 255, 255, 0.95);
+  --border-color: #cbd5e1;
+  --border-color-hover: #94a3b8;
+
+  --text-main: #090d16;
+  --text-muted: #334155;
+  --text-faint: #475569;
+  --text-color: #090d16;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] body,
+html.light body,
+body.light {
+  background-color: #f8fafc;
+  color: #090d16;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 50%);
+}
+
+html[data-theme="light"] h1, html[data-theme="light"] h2, html[data-theme="light"] h3, html[data-theme="light"] h4, html[data-theme="light"] h5, html[data-theme="light"] h6,
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
+body.light h1, body.light h2, body.light h3, body.light h4, body.light h5, body.light h6 {
+  color: #090d16 !important;
+}
+
+html[data-theme="light"] .sidebar,
+html.light .sidebar,
+body.light .sidebar {
+  background: rgba(255, 255, 255, 0.95);
+  border-right: 1px solid #cbd5e1;
+}
+
+html[data-theme="light"] .sidebar .logo-title,
+html.light .sidebar .logo-title,
+body.light .sidebar .logo-title {
+  color: #090d16;
+}
+
+html[data-theme="light"] .sidebar .nav-item,
+html.light .sidebar .nav-item,
+body.light .sidebar .nav-item {
+  color: #334155;
+}
+
+html[data-theme="light"] .sidebar .nav-item:hover,
+html.light .sidebar .nav-item:hover,
+body.light .sidebar .nav-item:hover {
+  color: #090d16;
+  background: #f1f5f9;
+}
+
+html[data-theme="light"] .topbar,
+html.light .topbar,
+body.light .topbar {
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #cbd5e1;
+}
+
+html[data-theme="light"] .topbar .page-title,
+html.light .topbar .page-title,
+body.light .topbar .page-title {
+  color: #090d16;
+}
+
+html[data-theme="light"] .card,
+html[data-theme="light"] .stat-card,
+html[data-theme="light"] .panel,
+html.light .card,
+html.light .stat-card,
+html.light .panel,
+body.light .card,
+body.light .stat-card,
+body.light .panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #090d16;
+}
+
+html[data-theme="light"] .table th,
+html.light .table th,
+body.light .table th {
+  color: #1e293b;
+  border-bottom-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+html[data-theme="light"] .table td,
+html.light .table td,
+body.light .table td {
+  color: #1e293b;
+  border-bottom-color: #f1f5f9;
+}
+
+html[data-theme="light"] .table tbody tr:hover,
+html.light .table tbody tr:hover,
+body.light .table tbody tr:hover {
+  background: #f8fafc;
+}
+
+html[data-theme="light"] .stat-value,
+html.light .stat-value,
+body.light .stat-value {
+  color: #090d16;
+}
+
+html[data-theme="light"] .stat-label,
+html.light .stat-label,
+body.light .stat-label {
+  color: #334155;
+  font-weight: 600;
+}
+
+/* Light Mode Form Controls */
+html[data-theme="light"] .form-control,
+html[data-theme="light"] .form-input,
+html[data-theme="light"] .form-select,
+html[data-theme="light"] .form-textarea,
+html[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+html[data-theme="light"] select,
+html[data-theme="light"] textarea,
+html.light .form-control,
+html.light .form-input,
+html.light .form-select,
+html.light .form-textarea,
+html.light input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+html.light select,
+html.light textarea,
+body.light .form-control,
+body.light .form-input,
+body.light .form-select,
+body.light .form-textarea,
+body.light input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+body.light select,
+body.light textarea {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #090d16 !important;
+}
+
+html[data-theme="light"] .form-control:focus,
+html[data-theme="light"] .form-input:focus,
+html[data-theme="light"] .form-select:focus,
+html[data-theme="light"] .form-textarea:focus,
+html.light .form-control:focus,
+html.light .form-input:focus,
+html.light .form-select:focus,
+html.light .form-textarea:focus,
+body.light .form-control:focus,
+body.light .form-input:focus,
+body.light .form-select:focus,
+body.light .form-textarea:focus {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  color: #090d16 !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+html[data-theme="light"] .form-control::placeholder,
+html[data-theme="light"] .form-textarea::placeholder,
+html.light .form-control::placeholder,
+html.light .form-textarea::placeholder,
+body.light .form-control::placeholder,
+body.light .form-textarea::placeholder {
+  color: #64748b !important;
+}
+
+html[data-theme="light"] .form-label,
+html.light .form-label,
+body.light .form-label {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* Light Mode Alerts & Success Messages */
+html[data-theme="light"] .alert-success,
+html.light .alert-success,
+body.light .alert-success {
+  background: #ecfdf5 !important;
+  border: 1px solid #6ee7b7 !important;
+  color: #090d16 !important;
+}
+
+html[data-theme="light"] .alert-success span,
+html[data-theme="light"] .alert-success p,
+html[data-theme="light"] .alert-success div,
+html.light .alert-success span,
+html.light .alert-success p,
+html.light .alert-success div,
+body.light .alert-success span,
+body.light .alert-success p,
+body.light .alert-success div {
+  color: #090d16 !important;
+  font-weight: 600;
+}
+
+html[data-theme="light"] .alert-success svg,
+html.light .alert-success svg,
+body.light .alert-success svg {
+  color: #059669 !important;
+}
+
+html[data-theme="light"] .alert-danger,
+html.light .alert-danger,
+body.light .alert-danger {
+  background: #fef2f2 !important;
+  border: 1px solid #fca5a5 !important;
+  color: #090d16 !important;
+}
+
+html[data-theme="light"] .alert-danger span,
+html[data-theme="light"] .alert-danger p,
+html[data-theme="light"] .alert-danger div,
+html.light .alert-danger span,
+html.light .alert-danger p,
+html.light .alert-danger div,
+body.light .alert-danger span,
+body.light .alert-danger p,
+body.light .alert-danger div {
+  color: #090d16 !important;
+  font-weight: 600;
+}
+
+html[data-theme="light"] .alert-danger svg,
+html.light .alert-danger svg,
+body.light .alert-danger svg {
+  color: #dc2626 !important;
+}
+
+html[data-theme="light"] .hero-unit-card,
+html.light .hero-unit-card,
+body.light .hero-unit-card {
+  background: linear-gradient(135deg, #ffffff, #f8fafc) !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+html[data-theme="light"] .sub-card,
+html.light .sub-card,
+body.light .sub-card {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+html[data-theme="light"] .notification-menu,
+html.light .notification-menu,
+body.light .notification-menu,
+html[data-theme="light"] .user-menu-dropdown,
+html.light .user-menu-dropdown,
+body.light .user-menu-dropdown {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 *, *::before, *::after {
@@ -89,7 +358,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--text-main);
 }
 
 a {

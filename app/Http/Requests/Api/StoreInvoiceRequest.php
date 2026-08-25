@@ -16,7 +16,8 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             'invoice_number' => 'required|string|max:255|unique:invoices,invoice_number',
-            'tenant_id' => 'nullable|exists:tenants,id',
+            'renter_id' => 'nullable|exists:renters,id',
+            'tenant_id' => 'nullable|exists:renters,id',
             'owner_id' => 'nullable|exists:owners,id',
             'unit_id' => 'nullable|exists:units,id',
             'amount' => 'required|numeric|min:0',

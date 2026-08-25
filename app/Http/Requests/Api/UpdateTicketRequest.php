@@ -21,7 +21,8 @@ class UpdateTicketRequest extends FormRequest
             'status' => 'nullable|in:open,in_progress,waiting,done,archived',
             'property_id' => 'nullable|exists:properties,id',
             'unit_id' => 'nullable|exists:units,id',
-            'tenant_id' => 'nullable|exists:tenants,id',
+            'renter_id' => 'nullable|exists:renters,id',
+            'tenant_id' => 'nullable|exists:renters,id',
         ];
     }
 }

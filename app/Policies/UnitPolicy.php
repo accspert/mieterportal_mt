@@ -27,10 +27,10 @@ class UnitPolicy
             return true;
         }
 
-        // current tenant can view
-        if ($unit->current_tenant_id && $user->id && method_exists($user, 'hasRole')) {
-            // if user is linked to tenant
-            if ($user->hasRole('Mieter') && $unit->currentTenant && $unit->currentTenant->user_id === $user->id) {
+        // current renter can view
+        if ($unit->current_renter_id && $user->id && method_exists($user, 'hasRole')) {
+            // if user is linked to renter
+            if ($user->hasRole('Mieter') && $unit->currentRenter && $unit->currentRenter->user_id === $user->id) {
                 return true;
             }
         }
@@ -53,6 +53,16 @@ class UnitPolicy
     }
 
     public function delete(User $user, Unit $unit): bool
+    {
+        return $this->create($user);
+    }
+
+    public function restore(User $user, Unit $unit): bool
+    {
+        return $this->create($user);
+    }
+
+    public function forceDelete(User $user, Unit $unit): bool
     {
         return $this->create($user);
     }

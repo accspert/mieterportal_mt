@@ -33,24 +33,24 @@
             </div>
         </div>
 
-        <div style="background: rgba(0,0,0,0.25); border-radius: var(--radius-md); padding: 16px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 13px;">
+        <div class="sub-card" style="border-radius: var(--radius-md); padding: 16px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 13px;">
             <div>
-                <span style="color: var(--text-muted); display: block; font-size: 11px; text-transform: uppercase;">Liegenschaft / Einheit</span>
-                <strong>{{ $ticket->property->name ?? '-' }} {{ $ticket->unit ? '(Einheit ' . $ticket->unit->number . ')' : '' }}</strong>
+                <span style="color: var(--text-muted); display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;">Liegenschaft / Einheit</span>
+                <strong style="color: var(--text-main); font-weight: 700;">{{ $ticket->property->name ?? '-' }} {{ $ticket->unit ? '(Einheit ' . $ticket->unit->number . ')' : '' }}</strong>
             </div>
             <div>
-                <span style="color: var(--text-muted); display: block; font-size: 11px; text-transform: uppercase;">Kategorie</span>
-                <strong style="text-transform: capitalize;">{{ $ticket->category ?? 'Allgemein' }}</strong>
+                <span style="color: var(--text-muted); display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;">Kategorie</span>
+                <strong style="color: var(--text-main); font-weight: 700; text-transform: capitalize;">{{ $ticket->category ?? 'Allgemein' }}</strong>
             </div>
             <div>
-                <span style="color: var(--text-muted); display: block; font-size: 11px; text-transform: uppercase;">Zuständiger Sachbearbeiter</span>
-                <strong>{{ $ticket->assignee->name ?? 'Wird zugewiesen' }}</strong>
+                <span style="color: var(--text-muted); display: block; font-size: 11px; font-weight: 600; text-transform: uppercase;">Zuständiger Sachbearbeiter</span>
+                <strong style="color: var(--text-main); font-weight: 700;">{{ $ticket->assignee->name ?? 'Wird zugewiesen' }}</strong>
             </div>
         </div>
 
         <div style="margin-bottom: 24px;">
-            <h4 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 8px;">Beschreibung</h4>
-            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">{{ $ticket->description }}</div>
+            <h4 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px;">Beschreibung</h4>
+            <div class="sub-card" style="padding: 16px; font-size: 14px; line-height: 1.6; color: var(--text-main); white-space: pre-wrap;">{{ $ticket->description }}</div>
         </div>
 
         @if($ticket->attachments && $ticket->attachments->isNotEmpty())

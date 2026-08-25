@@ -58,9 +58,14 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    public function renter(): HasOne
+    {
+        return $this->hasOne(Renter::class);
+    }
+
     public function tenant(): HasOne
     {
-        return $this->hasOne(Tenant::class);
+        return $this->renter();
     }
 
     public function owner(): HasOne
@@ -80,11 +85,11 @@ class User extends Authenticatable implements FilamentUser
 
     public function isTenant(): bool
     {
-        return $this->hasRole('Mieter') || $this->tenant !== null;
+        return $this->hasRole('Mieter') || $this->renter !== null;
     }
 
-    public function isOwner(): bool
+    public function isRenter(): bool
     {
-        return $this->hasRole('Eigentümer') || $this->owner !== null;
+        return $this->isTenant();
     }
 }

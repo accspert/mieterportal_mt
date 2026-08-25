@@ -21,7 +21,8 @@ class StoreTicketRequest extends FormRequest
             'priority' => 'nullable|in:low,medium,high,urgent',
             'property_id' => 'nullable|exists:properties,id',
             'unit_id' => 'nullable|exists:units,id',
-            'tenant_id' => 'nullable|exists:tenants,id',
+            'renter_id' => 'nullable|exists:renters,id',
+            'tenant_id' => 'nullable|exists:renters,id',
         ];
     }
 }

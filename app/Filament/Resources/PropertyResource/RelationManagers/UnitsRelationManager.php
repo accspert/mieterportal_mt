@@ -6,10 +6,15 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class UnitsRelationManager extends RelationManager
@@ -57,8 +62,8 @@ class UnitsRelationManager extends RelationManager
                 ->default('vacant')
                 ->required(),
 
-            Forms\Components\Select::make('current_tenant_id')
-                ->relationship('currentTenant', 'first_name')
+            Forms\Components\Select::make('current_renter_id')
+                ->relationship('currentRenter', 'first_name')
                 ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->first_name} {$record->last_name}".($record->email ? " ({$record->email})" : ''))
                 ->searchable()
                 ->preload()
@@ -91,21 +96,27 @@ class UnitsRelationManager extends RelationManager
                         'maintenance' => 'danger',
                         default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('currentTenant.first_name')
+                Tables\Columns\TextColumn::make('currentRenter.first_name')
                     ->label('Mieter')
-                    ->formatStateUsing(fn ($record) => $record->currentTenant ? "{$record->currentTenant->first_name} {$record->currentTenant->last_name}" : '-')
+                    ->formatStateUsing(fn ($record) => $record->currentRenter ? "{$record->currentRenter->first_name} {$record->currentRenter->last_name}" : '-')
                     ->default('-'),
             ])
-            ->filters([])
+            ->filters([
+                TrashedFilter::make(),
+            ])
             ->headerActions([
                 CreateAction::make()->label('Neue Einheit anlegen'),
             ])
             ->actions([
                 EditAction::make(),
                 DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 DeleteBulkAction::make(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ]);
     }
 }

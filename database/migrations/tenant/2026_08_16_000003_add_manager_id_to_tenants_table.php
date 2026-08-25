@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('tenants', function (Blueprint $table) {
+        Schema::table('renters', function (Blueprint $table) {
             $table->foreignId('manager_id')->nullable()->after('user_id')->constrained('users')->nullOnDelete();
         });
     }
 
     public function down(): void
     {
-        Schema::table('tenants', function (Blueprint $table) {
+        Schema::table('renters', function (Blueprint $table) {
             $table->dropForeign(['manager_id']);
             $table->dropColumn('manager_id');
         });

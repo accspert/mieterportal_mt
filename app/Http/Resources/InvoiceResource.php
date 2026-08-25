@@ -17,7 +17,8 @@ class InvoiceResource extends JsonResource
         return [
             'id' => $this->id,
             'invoice_number' => $this->invoice_number,
-            'tenant_id' => $this->tenant_id,
+            'renter_id' => $this->renter_id,
+            'tenant_id' => $this->renter_id,
             'owner_id' => $this->owner_id,
             'unit_id' => $this->unit_id,
             'amount' => (float) $this->amount,
@@ -25,10 +26,15 @@ class InvoiceResource extends JsonResource
             'status' => $this->status,
             'pdf_path' => $this->pdf_path,
             'notes' => $this->notes,
-            'tenant' => $this->whenLoaded('tenant', fn () => [
-                'id' => $this->tenant->id,
-                'name' => "{$this->tenant->first_name} {$this->tenant->last_name}",
-                'email' => $this->tenant->email,
+            'renter' => $this->whenLoaded('renter', fn () => [
+                'id' => $this->renter->id,
+                'name' => "{$this->renter->first_name} {$this->renter->last_name}",
+                'email' => $this->renter->email,
+            ]),
+            'tenant' => $this->whenLoaded('renter', fn () => [
+                'id' => $this->renter->id,
+                'name' => "{$this->renter->first_name} {$this->renter->last_name}",
+                'email' => $this->renter->email,
             ]),
             'owner' => $this->whenLoaded('owner', fn () => [
                 'id' => $this->owner->id,

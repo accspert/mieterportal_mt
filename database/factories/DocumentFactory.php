@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Document;
 use App\Models\Property;
-use App\Models\Tenant;
+use App\Models\Renter;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,7 +18,7 @@ class DocumentFactory extends Factory
         return [
             'documentable_type' => $this->faker->randomElement([
                 Property::class,
-                Tenant::class,
+                Renter::class,
                 Unit::class,
             ]),
             'documentable_id' => 1,

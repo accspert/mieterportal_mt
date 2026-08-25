@@ -62,5 +62,14 @@ class DocumentPolicy
     {
         return $this->create($user);
     }
-}
 
+    public function restore(User $user, Document $document): bool
+    {
+        return $this->create($user);
+    }
+
+    public function forceDelete(User $user, Document $document): bool
+    {
+        return $this->create($user);
+    }
+}

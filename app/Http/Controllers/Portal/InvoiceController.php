@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Models\Owner;
+use App\Models\Renter;
+use App\Models\Unit;
 use App\Models\User;
 use App\Services\InvoicePdfService;
 use Illuminate\Http\Request;
@@ -18,20 +21,20 @@ class InvoiceController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $tenant = $user->tenant ?? \App\Models\Tenant::where('user_id', $user->id)->first() ?? \App\Models\Tenant::where('email', $user->email)->first();
-        $owner = $user->owner ?? \App\Models\Owner::where('user_id', $user->id)->first() ?? \App\Models\Owner::where('email', $user->email)->first();
+        $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
+        $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
 
-        $query = Invoice::query()->with(['unit', 'tenant', 'owner']);
+        $query = Invoice::query()->with(['unit', 'renter', 'owner']);
 
-        if ($tenant) {
-            $unitIds = $tenant->units()->pluck('id')->toArray();
-            $query->where(function ($q) use ($tenant, $unitIds) {
-                $q->where('tenant_id', $tenant->id)
+        if ($renter) {
+            $unitIds = $renter->units()->pluck('id')->toArray();
+            $query->where(function ($q) use ($renter, $unitIds) {
+                $q->where('renter_id', $renter->id)
                     ->orWhereIn('unit_id', $unitIds);
             });
         } elseif ($owner) {
             $propertyIds = $owner->properties()->pluck('id')->toArray();
-            $unitIds = \App\Models\Unit::whereIn('property_id', $propertyIds)->pluck('id')->toArray();
+            $unitIds = Unit::whereIn('property_id', $propertyIds)->pluck('id')->toArray();
             $query->where(function ($q) use ($owner, $unitIds) {
                 $q->where('owner_id', $owner->id)
                     ->orWhereIn('unit_id', $unitIds);
@@ -71,10 +74,10 @@ class InvoiceController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $tenant = $user->tenant;
+        $renter = $user->renter;
         $owner = $user->owner;
 
-        $authorized = ($tenant && $invoice->tenant_id === $tenant->id) ||
+        $authorized = ($renter && $invoice->renter_id === $renter->id) ||
             ($owner && $invoice->owner_id === $owner->id) ||
             $user->hasAnyRole(['Administrator', 'Sachbearbeiter']);
 

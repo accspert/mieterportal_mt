@@ -7,6 +7,15 @@ use App\Models\User;
 
 class TicketPolicy
 {
+    public function before(User $user, string $ability): ?bool
+    {
+        if ($user->hasRole('Administrator')) {
+            return true;
+        }
+
+        return null;
+    }
+
     public function viewAny(User $user): bool
     {
         return $user->hasRole('Sachbearbeiter') || $user->hasPermissionTo('manage tickets');
@@ -19,7 +28,7 @@ class TicketPolicy
             return true;
         }
 
-        if ($ticket->tenant && $ticket->tenant->user_id === $user->id) {
+        if ($ticket->renter && $ticket->renter->user_id === $user->id) {
             return true;
         }
 
@@ -44,5 +53,15 @@ class TicketPolicy
     public function delete(User $user, Ticket $ticket): bool
     {
         return $user->hasRole('Sachbearbeiter') || $user->hasPermissionTo('manage tickets');
+    }
+
+    public function restore(User $user, Ticket $ticket): bool
+    {
+        return $this->delete($user, $ticket);
+    }
+
+    public function forceDelete(User $user, Ticket $ticket): bool
+    {
+        return $this->delete($user, $ticket);
     }
 }

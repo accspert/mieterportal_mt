@@ -5,6 +5,7 @@ use App\Providers\AuthServiceProvider;
 use App\Providers\EventServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
 use App\Providers\FilamentServiceProvider;
+use App\Providers\TenancyServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -12,4 +13,5 @@ return [
     EventServiceProvider::class,
     FilamentServiceProvider::class,
     AdminPanelProvider::class,
+    TenancyServiceProvider::class,
 ];

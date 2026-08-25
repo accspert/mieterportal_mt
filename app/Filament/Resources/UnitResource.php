@@ -5,12 +5,18 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UnitResource\Pages;
 use App\Models\Unit;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -53,18 +59,49 @@ class UnitResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Forms\Components\Select::make('property_id')->relationship('property', 'name')->searchable()->required()->label('Liegenschaft'),
-            Forms\Components\TextInput::make('number')->required()->maxLength(50)->label('Einheit / Wohnungsnummer'),
-            Forms\Components\TextInput::make('floor')->maxLength(50)->label('Etage / Stockwerk'),
-            Forms\Components\TextInput::make('area')->numeric()->label('Wohnfläche (m²)'),
-            Forms\Components\TextInput::make('rooms')->numeric()->label('Zimmeranzahl'),
-            Forms\Components\Select::make('status')->options([
-                'vacant' => 'Leerstehend',
-                'occupied' => 'Vermietet',
-                'maintenance' => 'In Renovierung',
-                'inactive' => 'Inaktiv',
-            ])->default('vacant')->label('Status'),
-            Forms\Components\Select::make('current_tenant_id')->relationship('currentTenant', 'first_name')->searchable()->nullable()->label('Aktueller Mieter'),
+            Forms\Components\Select::make('property_id')
+                ->relationship('property', 'name')
+                ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name}".($record->city ? " ({$record->city})" : ''))
+                ->searchable()
+                ->preload()
+                ->required()
+                ->label('Liegenschaft'),
+
+            Forms\Components\TextInput::make('number')
+                ->required()
+                ->maxLength(50)
+                ->label('Einheit / Wohnungsnummer'),
+
+            Forms\Components\TextInput::make('floor')
+                ->maxLength(50)
+                ->label('Etage / Stockwerk'),
+
+            Forms\Components\TextInput::make('area')
+                ->numeric()
+                ->label('Wohnfläche (m²)'),
+
+            Forms\Components\TextInput::make('rooms')
+                ->numeric()
+                ->label('Zimmeranzahl'),
+
+            Forms\Components\Select::make('status')
+                ->options([
+                    'vacant' => 'Leerstehend',
+                    'occupied' => 'Vermietet',
+                    'maintenance' => 'In Renovierung',
+                    'inactive' => 'Inaktiv',
+                ])
+                ->default('vacant')
+                ->required()
+                ->label('Status'),
+
+            Forms\Components\Select::make('current_renter_id')
+                ->relationship('currentRenter', 'first_name')
+                ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->first_name} {$record->last_name}".($record->email ? " ({$record->email})" : ''))
+                ->searchable(['first_name', 'last_name', 'email'])
+                ->preload()
+                ->nullable()
+                ->label('Aktueller Mieter (optional)'),
         ]);
     }
 
@@ -92,14 +129,24 @@ class UnitResource extends Resource
                         'maintenance' => 'danger',
                         default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('currentTenant.first_name')->label('Mieter')->default('-'),
+                Tables\Columns\TextColumn::make('currentRenter.last_name')
+                    ->label('Mieter')
+                    ->formatStateUsing(fn ($record) => $record->currentRenter ? "{$record->currentRenter->first_name} {$record->currentRenter->last_name}" : '-')
+                    ->default('-'),
             ])
-            ->filters([])
+            ->filters([
+                TrashedFilter::make(),
+            ])
             ->actions([
                 EditAction::make(),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 DeleteBulkAction::make(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ]);
     }
 

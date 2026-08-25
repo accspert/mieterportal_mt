@@ -13,7 +13,7 @@ use Spatie\Permission\Models\Role;
 
 class KundenportalHealthCheck extends Command
 {
-    protected $signature = 'mieterportal:health';
+    protected $signature = 'mieterportal:health {--tenant= : Check a specific SaaS tenant database}';
 
     protected $aliases = ['kundenportal:health'];
 
@@ -28,14 +28,15 @@ class KundenportalHealthCheck extends Command
 
         $allOk = true;
 
-        // 1. Database Connectivity
-        $this->comment('1. Datenbank-Verbindung & Status:');
+        // 1. Central Database Connectivity
+        $this->comment('1. Zentrale Datenbank-Verbindung & Mandanten:');
         try {
             DB::connection()->getPdo();
             $dbName = DB::connection()->getDatabaseName();
-            $this->line("   [OK] Datenbank erreichbar (Verbindung: {$dbName})");
+            $tenantCount = \App\Models\CompanyTenant::count();
+            $this->line("   [OK] Zentrale Datenbank erreichbar ({$dbName}) — {$tenantCount} SaaS-Mandanten registriert");
         } catch (\Throwable $e) {
-            $this->error("   [FEHLER] Datenbank nicht erreichbar: {$e->getMessage()}");
+            $this->error("   [FEHLER] Zentrale Datenbank nicht erreichbar: {$e->getMessage()}");
             $allOk = false;
         }
 
@@ -52,40 +53,48 @@ class KundenportalHealthCheck extends Command
             $allOk = false;
         }
 
-        // 3. Security & Roles
+        // 3. Check Tenant Databases
         $this->newLine();
-        $this->comment('3. Rollen- & Berechtigungssystem:');
-        $expectedRoles = ['Administrator', 'Sachbearbeiter', 'Eigentümer', 'Mieter'];
-        $existingRoles = Role::pluck('name')->toArray();
-        $missingRoles = array_diff($expectedRoles, $existingRoles);
+        $this->comment('3. Mandanten-Datenbanken & Kennzahlen:');
 
-        if (empty($missingRoles)) {
-            $this->line('   [OK] Alle Standard-Rollen vorhanden ('.implode(', ', $expectedRoles).')');
-        } else {
-            $this->warn('   [WARNUNG] Fehlende Rollen: '.implode(', ', $missingRoles));
-            $allOk = false;
+        $tenantQuery = \App\Models\CompanyTenant::query();
+        if ($tenantId = $this->option('tenant')) {
+            $tenantQuery->where('id', $tenantId);
         }
 
-        // 4. Operational KPIs & Domain Summary
-        $this->newLine();
-        $this->comment('4. Operative Kennzahlen & Datenbestand:');
-        $propertiesCount = Property::count();
-        $unitsCount = Unit::count();
-        $occupiedUnits = Unit::whereNotNull('current_tenant_id')->count();
-        $openTickets = Ticket::whereIn('status', ['open', 'in_progress', 'waiting'])->count();
-        $unpaidInvoices = Invoice::whereIn('status', ['sent', 'overdue'])->count();
-        $unpaidAmount = Invoice::whereIn('status', ['sent', 'overdue'])->sum('amount');
+        $tenants = $tenantQuery->get();
 
-        $this->table(
-            ['Metrik / Bereich', 'Wert'],
-            [
-                ['Liegenschaften / Objekte', $propertiesCount],
-                ['Einheiten (Gesamt)', $unitsCount],
-                ['Vermietete Einheiten', "{$occupiedUnits} (".($unitsCount > 0 ? round(($occupiedUnits / $unitsCount) * 100, 1) : 0).'%)'],
-                ['Offene Service-Tickets', $openTickets],
-                ['Ausstehende Rechnungen', "{$unpaidInvoices} (".number_format($unpaidAmount, 2, ',', '.').' €)'],
-            ]
-        );
+        if ($tenants->isEmpty()) {
+            $this->warn('   [WARNUNG] Keine passenden Mandanten gefunden.');
+        }
+
+        foreach ($tenants as $tenant) {
+            $this->line("   --- Mandant: <info>{$tenant->id}</info> ---");
+            $tenant->run(function () use (&$allOk) {
+                try {
+                    $propertiesCount = Property::count();
+                    $unitsCount = Unit::count();
+                    $occupiedUnits = Unit::whereNotNull('current_renter_id')->count();
+                    $openTickets = Ticket::whereIn('status', ['open', 'in_progress', 'waiting'])->count();
+                    $unpaidInvoices = Invoice::whereIn('status', ['sent', 'overdue'])->count();
+                    $unpaidAmount = Invoice::whereIn('status', ['sent', 'overdue'])->sum('amount');
+
+                    $this->table(
+                        ['Metrik / Bereich', 'Wert'],
+                        [
+                            ['Liegenschaften / Objekte', $propertiesCount],
+                            ['Einheiten (Gesamt)', $unitsCount],
+                            ['Vermietete Einheiten', "{$occupiedUnits} (".($unitsCount > 0 ? round(($occupiedUnits / $unitsCount) * 100, 1) : 0).'%)'],
+                            ['Offene Service-Tickets', $openTickets],
+                            ['Ausstehende Rechnungen', "{$unpaidInvoices} (".number_format($unpaidAmount, 2, ',', '.').' €)'],
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    $this->error("   [FEHLER] Mandanten-Prüfung fehlgeschlagen: {$e->getMessage()}");
+                    $allOk = false;
+                }
+            });
+        }
 
         $this->newLine();
         if ($allOk) {

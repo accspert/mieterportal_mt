@@ -8,8 +8,8 @@ use App\Models\Invoice;
 use App\Models\Message;
 use App\Models\Owner;
 use App\Models\Property;
+use App\Models\Renter;
 use App\Models\Task;
-use App\Models\Tenant;
 use App\Models\Ticket;
 use App\Models\Unit;
 use App\Models\User;
@@ -37,14 +37,14 @@ class DatabaseSeeder extends Seeder
         $staff = User::firstOrCreate(
             ['email' => 'staff@kundenportal.local'],
             [
-                'name' => 'Sachbearbeiter',
+                'name' => 'Max Mustermann (Sachbearbeiter)',
                 'password' => bcrypt('password'),
                 'email_verified_at' => now(),
             ],
         );
         $staff->assignRole('Sachbearbeiter');
 
-        $ahmad = User::firstOrCreate(
+        $staff2 = User::firstOrCreate(
             ['email' => 'ahmad.sahid@kundenportal.local'],
             [
                 'name' => 'Ahmad Sahid',
@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ],
         );
-        $ahmad->assignRole('Sachbearbeiter');
+        $staff2->assignRole('Sachbearbeiter');
 
         $ownerUser = User::firstOrCreate(
             ['email' => 'owner@kundenportal.local'],
@@ -90,9 +90,9 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        $tenants = Tenant::factory()->count(18)->create();
-        // Link the first tenant firmly to tenantUser
-        $tenants->first()->update([
+        $renters = Renter::factory()->count(18)->create();
+        // Link the first renter firmly to tenantUser
+        $renters->first()->update([
             'user_id' => $tenantUser->id,
             'first_name' => 'Maximilian',
             'last_name' => 'Mustermann',
@@ -109,26 +109,26 @@ class DatabaseSeeder extends Seeder
         }
 
         foreach ($units as $index => $unit) {
-            if ($tenants->get($index % $tenants->count())) {
-                $unit->update(['current_tenant_id' => $tenants->get($index % $tenants->count())->id]);
+            if ($renters->get($index % $renters->count())) {
+                $unit->update(['current_renter_id' => $renters->get($index % $renters->count())->id]);
             }
         }
 
         $ticketUsers = User::query()->pluck('id');
         foreach ($properties as $property) {
             for ($i = 0; $i < 2; $i++) {
-                $chosenTenant = $tenants->random();
+                $chosenRenter = $renters->random();
                 Ticket::factory()->create([
                     'property_id' => $property->id,
                     'unit_id' => $property->units()->inRandomOrder()->first()?->id,
-                    'tenant_id' => $chosenTenant?->id,
-                    'created_by' => $chosenTenant?->user_id ?? $ticketUsers->random(),
+                    'renter_id' => $chosenRenter?->id,
+                    'created_by' => $chosenRenter?->user_id ?? $ticketUsers->random(),
                     'assigned_to' => $property->manager_id ?? $staff->id,
                 ]);
             }
         }
 
-        $documentableModels = $properties->merge($tenants)->merge($units);
+        $documentableModels = $properties->merge($renters)->merge($units);
         foreach ($documentableModels as $model) {
             for ($i = 0; $i < 2; $i++) {
                 $document = Document::factory()->create([
@@ -170,7 +170,7 @@ class DatabaseSeeder extends Seeder
         foreach ($units->take(6) as $index => $unit) {
             Invoice::factory()->create([
                 'invoice_number' => 'RE-2026-'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT),
-                'tenant_id' => $unit->current_tenant_id,
+                'renter_id' => $unit->current_renter_id,
                 'unit_id' => $unit->id,
                 'owner_id' => $unit->property->owner_id,
             ]);

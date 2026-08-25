@@ -3,7 +3,131 @@
 :root {
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Outfit', var(--font-sans);
+}
 
+/* ==========================================================================
+   LIGHT MODE (Default when .dark is NOT present on html)
+   ========================================================================== */
+html:not(.dark) {
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f1f5f9;
+  --bg-surface-glass: rgba(255, 255, 255, 0.95);
+  --border-color: #cbd5e1;
+  --border-color-hover: #94a3b8;
+
+  --text-main: #090d16;
+  --text-muted: #334155;
+  --text-faint: #475569;
+}
+
+html:not(.dark) body {
+  font-family: var(--font-sans) !important;
+  background-color: #f8fafc !important;
+  color: #090d16 !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 50%) !important;
+  background-attachment: fixed !important;
+}
+
+/* Light Typography & Contrast Overrides */
+html:not(.dark) .fi-header-heading,
+html:not(.dark) .fi-section-header-heading,
+html:not(.dark) .fi-ta-header-cell,
+html:not(.dark) .fi-ta-cell,
+html:not(.dark) .fi-fo-field-wrp-label,
+html:not(.dark) .fi-sidebar-item-label,
+html:not(.dark) .fi-dropdown-list-item-label,
+html:not(.dark) .fi-wi-stats-overview-stat-value,
+html:not(.dark) .fi-ta-text-item-label {
+  color: #090d16 !important;
+}
+
+html:not(.dark) .fi-ta-header-cell {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+html:not(.dark) .fi-sidebar-item-label {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+html:not(.dark) .fi-sidebar-item-active .fi-sidebar-item-label {
+  color: #090d16 !important;
+  font-weight: 700 !important;
+}
+
+html:not(.dark) .fi-ta-text-item-description,
+html:not(.dark) .fi-fo-field-wrp-helper-text,
+html:not(.dark) .fi-section-header-description,
+html:not(.dark) .fi-wi-stats-overview-stat-label,
+html:not(.dark) .fi-breadcrumbs-item-label {
+  color: #334155 !important;
+  font-weight: 500 !important;
+}
+
+/* Light Sidebar */
+html:not(.dark) .fi-sidebar,
+html:not(.dark) aside.fi-sidebar {
+  background-color: #ffffff !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+/* Light Topbar */
+html:not(.dark) .fi-topbar,
+html:not(.dark) nav.fi-topbar {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+}
+
+/* Light Cards, Sections, Stats & Widgets */
+html:not(.dark) .fi-section,
+html:not(.dark) .fi-ta-ctn,
+html:not(.dark) .fi-wi-stats-overview-stat,
+html:not(.dark) .fi-wi-chart,
+html:not(.dark) .fi-card,
+html:not(.dark) .fi-widget {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Light Tables */
+html:not(.dark) .fi-ta-table {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .fi-ta-header,
+html:not(.dark) .fi-ta-content {
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .fi-ta-row:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Light Scrollbars */
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* ==========================================================================
+   DARK MODE (When .dark is present on html)
+   ========================================================================== */
+html.dark {
   --bg-page: #0b0f19;
   --bg-surface: #131b2e;
   --bg-surface-elevated: #1a243d;
@@ -16,77 +140,76 @@
   --text-faint: #64748b;
 }
 
-body {
+html.dark body {
   font-family: var(--font-sans) !important;
-  background-color: var(--bg-page) !important;
-  color: var(--text-main) !important;
+  background-color: #0b0f19 !important;
+  color: #f8fafc !important;
   background-image: 
     radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.08) 0px, transparent 50%) !important;
   background-attachment: fixed !important;
 }
 
-/* Filament Sidebar styling */
-.fi-sidebar,
-aside.fi-sidebar {
-  background-color: var(--bg-surface) !important;
-  border-right: 1px solid var(--border-color) !important;
+/* Dark Sidebar */
+html.dark .fi-sidebar,
+html.dark aside.fi-sidebar {
+  background-color: #131b2e !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Filament Topbar styling */
-.fi-topbar,
-nav.fi-topbar {
+/* Dark Topbar */
+html.dark .fi-topbar,
+html.dark nav.fi-topbar {
   background-color: rgba(19, 27, 46, 0.85) !important;
   backdrop-filter: blur(12px) !important;
-  border-bottom: 1px solid var(--border-color) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Filament Cards, Panels, Sections */
-.fi-section,
-.fi-ta-ctn,
-.fi-wi-stats-overview-stat,
-.fi-wi-chart,
-.fi-card {
-  background-color: var(--bg-surface) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 14px !important;
+/* Dark Cards, Sections, Stats & Widgets */
+html.dark .fi-section,
+html.dark .fi-ta-ctn,
+html.dark .fi-wi-stats-overview-stat,
+html.dark .fi-wi-chart,
+html.dark .fi-card,
+html.dark .fi-widget {
+  background-color: #131b2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Filament Tables */
-.fi-ta-table {
-  background-color: var(--bg-surface) !important;
+/* Dark Tables */
+html.dark .fi-ta-table {
+  background-color: #131b2e !important;
 }
 
-.fi-ta-header,
-.fi-ta-content {
-  border-color: var(--border-color) !important;
+html.dark .fi-ta-header,
+html.dark .fi-ta-content {
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-.fi-ta-row:hover {
+html.dark .fi-ta-row:hover {
   background-color: rgba(255, 255, 255, 0.03) !important;
 }
 
-/* Filament Headings */
-h1, h2, h3, h4, .fi-header-heading {
-  font-family: var(--font-heading) !important;
-  letter-spacing: -0.02em !important;
-}
-
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
+/* Dark Scrollbars */
+html.dark ::-webkit-scrollbar-track {
   background: #0b0f19;
 }
 
-::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+html.dark ::-webkit-scrollbar-thumb:hover {
   background: #334155;
+}
+
+
+/* ==========================================================================
+   COMMON STYLES
+   ========================================================================== */
+h1, h2, h3, h4, .fi-header-heading {
+  font-family: var(--font-heading) !important;
+  letter-spacing: -0.02em !important;
 }

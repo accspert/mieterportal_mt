@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
-use App\Models\Tenant;
+use App\Models\Renter;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TenantFactory extends Factory
 {
-    protected $model = Tenant::class;
+    protected $model = Renter::class;
 
     public function definition()
     {

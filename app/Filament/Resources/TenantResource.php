@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TenantResource\Pages;
 use App\Models\Tenant;
+use App\Models\Unit;
+use App\Models\User;
 use App\Services\CsvExportService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -11,12 +13,15 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use UnitEnum;
 
 class TenantResource extends Resource
@@ -92,7 +97,7 @@ class TenantResource extends Resource
             Forms\Components\Select::make('manager_id')
                 ->label('Zuständiger Sachbearbeiter')
                 ->relationship('manager', 'name')
-                ->options(fn () => \App\Models\User::role(['Sachbearbeiter', 'Administrator'])->pluck('name', 'id'))
+                ->options(fn () => User::role(['Sachbearbeiter', 'Administrator'])->pluck('name', 'id'))
                 ->searchable()
                 ->preload()
                 ->nullable(),
@@ -104,7 +109,7 @@ class TenantResource extends Resource
                 )
                 ->getOptionLabelFromRecordUsing(fn ($record) => "Einheit {$record->number}".($record->property ? " – {$record->property->name} ({$record->property->city}, {$record->property->street})" : ''))
                 ->getSearchResultsUsing(function (string $search): array {
-                    return \App\Models\Unit::query()
+                    return Unit::query()
                         ->with('property')
                         ->where(function ($q) use ($search) {
                             $q->where('number', 'like', "%{$search}%")
@@ -122,7 +127,7 @@ class TenantResource extends Resource
                         ->toArray();
                 })
                 ->getOptionLabelsUsing(function (array $values): array {
-                    return \App\Models\Unit::query()
+                    return Unit::query()
                         ->with('property')
                         ->whereIn('id', $values)
                         ->get()
@@ -236,7 +241,7 @@ class TenantResource extends Resource
                             ->maxLength(255),
                         Forms\Components\Select::make('manager_id')
                             ->label('Zuständiger Sachbearbeiter')
-                            ->options(fn () => \App\Models\User::role(['Sachbearbeiter', 'Administrator'])->pluck('name', 'id'))
+                            ->options(fn () => User::role(['Sachbearbeiter', 'Administrator'])->pluck('name', 'id'))
                             ->default(fn (Tenant $record) => $record->manager_id ?? $record->units->first()?->property?->manager_id ?? auth()->id())
                             ->searchable()
                             ->preload()
@@ -244,23 +249,23 @@ class TenantResource extends Resource
                             ->helperText('Der ausgewählte Sachbearbeiter wird für diesen Mieter als Ansprechpartner und für Schadensmeldungen hinterlegt.'),
                         Forms\Components\TextInput::make('password')
                             ->label('Generiertes Initial-Passwort')
-                            ->default(fn (): string => \Illuminate\Support\Str::password(10, true, true, false, false))
+                            ->default(fn (): string => Str::password(10, true, true, false, false))
                             ->helperText('Dieses Passwort bitte kopieren und dem Mieter für die Erstanmeldung im Mieterportal übergeben.')
                             ->required()
                             ->maxLength(255),
                     ])
                     ->action(function (Tenant $record, array $data): void {
-                        $user = \App\Models\User::where('email', $data['email'])->first();
+                        $user = User::where('email', $data['email'])->first();
                         if ($user) {
                             $user->update([
                                 'name' => $data['name'],
-                                'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+                                'password' => Hash::make($data['password']),
                             ]);
                         } else {
-                            $user = \App\Models\User::create([
+                            $user = User::create([
                                 'name' => $data['name'],
                                 'email' => $data['email'],
-                                'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+                                'password' => Hash::make($data['password']),
                                 'email_verified_at' => now(),
                             ]);
                         }
@@ -273,7 +278,7 @@ class TenantResource extends Resource
                             'manager_id' => $data['manager_id'] ?? $record->manager_id,
                         ]);
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Benutzerkonto erfolgreich angelegt')
                             ->body("Zugangsdaten für {$data['name']}:\nE-Mail: {$data['email']}\nPasswort: {$data['password']}")
                             ->success()
@@ -292,7 +297,7 @@ class TenantResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('password')
                             ->label('Neues generiertes Passwort')
-                            ->default(fn (): string => \Illuminate\Support\Str::password(10, true, true, false, false))
+                            ->default(fn (): string => Str::password(10, true, true, false, false))
                             ->helperText('Kopieren Sie dieses neue Passwort für den Mieter.')
                             ->required()
                             ->maxLength(255),
@@ -300,10 +305,10 @@ class TenantResource extends Resource
                     ->action(function (Tenant $record, array $data): void {
                         if ($record->user) {
                             $record->user->update([
-                                'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+                                'password' => Hash::make($data['password']),
                             ]);
 
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Passwort erfolgreich zurückgesetzt')
                                 ->body("Neues Passwort für {$record->first_name} {$record->last_name} ({$record->email}):\n{$data['password']}")
                                 ->success()
@@ -328,20 +333,20 @@ class TenantResource extends Resource
 
                         foreach ($records as $tenant) {
                             if (! $tenant->user_id && $tenant->email) {
-                                $plainPassword = \Illuminate\Support\Str::password(10, true, true, false, false);
+                                $plainPassword = Str::password(10, true, true, false, false);
                                 $name = "{$tenant->first_name} {$tenant->last_name}";
 
-                                $user = \App\Models\User::where('email', $tenant->email)->first();
+                                $user = User::where('email', $tenant->email)->first();
                                 if (! $user) {
-                                    $user = \App\Models\User::create([
+                                    $user = User::create([
                                         'name' => $name,
                                         'email' => $tenant->email,
-                                        'password' => \Illuminate\Support\Facades\Hash::make($plainPassword),
+                                        'password' => Hash::make($plainPassword),
                                         'email_verified_at' => now(),
                                     ]);
                                 } else {
                                     $user->update([
-                                        'password' => \Illuminate\Support\Facades\Hash::make($plainPassword),
+                                        'password' => Hash::make($plainPassword),
                                     ]);
                                 }
 
@@ -354,14 +359,14 @@ class TenantResource extends Resource
                         }
 
                         if ($created > 0) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title("{$created} Benutzerkonten angelegt")
                                 ->body("Erstellte Zugänge:\n".implode("\n", array_slice($credentials, 0, 5)).($created > 5 ? "\n... und weitere" : ''))
                                 ->success()
                                 ->duration(25000)
                                 ->send();
                         } else {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Keine neuen Konten erstellt')
                                 ->body('Alle ausgewählten Mieter besitzen bereits ein Konto oder haben keine E-Mail-Adresse hinterlegt.')
                                 ->warning()

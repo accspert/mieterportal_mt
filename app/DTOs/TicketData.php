@@ -12,6 +12,8 @@ class TicketData
 
     public ?int $unit_id;
 
+    public ?int $renter_id;
+
     public ?int $tenant_id;
 
     public string $priority;
@@ -22,7 +24,8 @@ class TicketData
         $this->description = $data['description'] ?? null;
         $this->property_id = $data['property_id'] ?? null;
         $this->unit_id = $data['unit_id'] ?? null;
-        $this->tenant_id = $data['tenant_id'] ?? null;
+        $this->renter_id = $data['renter_id'] ?? $data['tenant_id'] ?? null;
+        $this->tenant_id = $this->renter_id;
         $this->priority = $data['priority'] ?? 'medium';
     }
 
@@ -38,7 +41,8 @@ class TicketData
             'description' => $this->description,
             'property_id' => $this->property_id,
             'unit_id' => $this->unit_id,
-            'tenant_id' => $this->tenant_id,
+            'renter_id' => $this->renter_id,
+            'tenant_id' => $this->renter_id,
             'priority' => $this->priority,
         ];
     }

@@ -45,8 +45,8 @@
                 @forelse($tickets as $ticket)
                     <tr>
                         <td>
-                            <div style="font-weight: 600; color: #fff;">{{ $ticket->title }}</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">#T-{{ $ticket->id }}</div>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 14px;">{{ $ticket->title }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">#T-{{ $ticket->id }}</div>
                         </td>
                         <td>
                             <div>{{ $ticket->property->name ?? '-' }}</div>

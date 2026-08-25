@@ -22,6 +22,7 @@ class InitialSetupSeeder extends Seeder
             'manage properties',
             'manage units',
             'manage tenants',
+            'manage renters',
             'manage documents',
             'manage tickets',
             'manage messages',

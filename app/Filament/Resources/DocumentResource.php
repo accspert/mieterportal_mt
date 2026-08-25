@@ -6,16 +6,22 @@ use App\Filament\Resources\DocumentResource\Pages;
 use App\Models\Document;
 use App\Models\Owner;
 use App\Models\Property;
-use App\Models\Tenant;
+use App\Models\Renter;
 use App\Models\Unit;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -72,7 +78,7 @@ class DocumentResource extends Resource
     {
         /** @var Document $record */
         $target = '-';
-        if ($record->documentable instanceof Tenant) {
+        if ($record->documentable instanceof Renter) {
             $target = "Mieter: {$record->documentable->first_name} {$record->documentable->last_name}";
         } elseif ($record->documentable instanceof Owner) {
             $target = 'Eigentümer: '.($record->documentable->company_name ?: "{$record->documentable->first_name} {$record->documentable->last_name}");
@@ -95,13 +101,22 @@ class DocumentResource extends Resource
                 ->label('Dokument-Datei hochladen (PDF, Word, Bild etc.)')
                 ->disk('public')
                 ->directory('documents')
-                ->preserveFilenames()
                 ->maxSize(25600)
                 ->live()
                 ->afterStateUpdated(function ($state, $set, $get) {
                     if ($state && ! $get('filename')) {
-                        $clientOriginalName = is_string($state) ? basename($state) : (method_exists($state, 'getClientOriginalName') ? $state->getClientOriginalName() : basename($state));
-                        $set('filename', $clientOriginalName);
+                        $file = is_array($state) ? reset($state) : $state;
+                        $rawName = '';
+                        if (is_string($file)) {
+                            $rawName = basename($file);
+                        } elseif (is_object($file) && method_exists($file, 'getClientOriginalName')) {
+                            $rawName = $file->getClientOriginalName();
+                        }
+                        if ($rawName) {
+                            $cleanName = mb_convert_encoding((string) $rawName, 'UTF-8', 'UTF-8');
+                            $cleanName = iconv('UTF-8', 'UTF-8//IGNORE', $cleanName) ?: $rawName;
+                            $set('filename', $cleanName);
+                        }
                     }
                 })
                 ->required(),
@@ -144,10 +159,10 @@ class DocumentResource extends Resource
             Forms\Components\Select::make('documentable_type')
                 ->label('Zuordnungstyp (Wohin gehört das Dokument?)')
                 ->options([
-                    \App\Models\Tenant::class => 'Mieter (z.B. Mietvertrag, Ausweise)',
-                    \App\Models\Property::class => 'Liegenschaft (z.B. Energieausweis, Hausordnung)',
-                    \App\Models\Unit::class => 'Mieteinheit / Wohnung (z.B. Grundriss, Protokoll)',
-                    \App\Models\Owner::class => 'Eigentümer (z.B. Verwaltervertrag, Abrechnung)',
+                    Renter::class => 'Mieter (z.B. Mietvertrag, Ausweise)',
+                    Property::class => 'Liegenschaft (z.B. Energieausweis, Hausordnung)',
+                    Unit::class => 'Mieteinheit / Wohnung (z.B. Grundriss, Protokoll)',
+                    Owner::class => 'Eigentümer (z.B. Verwaltervertrag, Abrechnung)',
                 ])
                 ->live()
                 ->required(),
@@ -158,10 +173,22 @@ class DocumentResource extends Resource
                     $type = $get('documentable_type');
 
                     return match ($type) {
-                        \App\Models\Tenant::class => \App\Models\Tenant::all()->mapWithKeys(fn ($t) => [$t->id => "{$t->first_name} {$t->last_name}".($t->email ? " ({$t->email})" : '')]),
-                        \App\Models\Property::class => \App\Models\Property::all()->mapWithKeys(fn ($p) => [$p->id => "{$p->name} ({$p->city})"]),
-                        \App\Models\Unit::class => \App\Models\Unit::with('property')->get()->mapWithKeys(fn ($u) => [$u->id => "Einheit {$u->number}".($u->property ? " – {$u->property->name}" : '')]),
-                        \App\Models\Owner::class => \App\Models\Owner::all()->mapWithKeys(fn ($o) => [$o->id => ($o->company_name ?: "{$o->first_name} {$o->last_name}")]),
+                        Renter::class => Renter::all()->mapWithKeys(function ($t) {
+                            $label = "{$t->first_name} {$t->last_name}".($t->email ? " ({$t->email})" : '');
+                            return [$t->id => mb_convert_encoding($label, 'UTF-8', 'UTF-8')];
+                        }),
+                        Property::class => Property::all()->mapWithKeys(function ($p) {
+                            $label = "{$p->name}".($p->city ? " ({$p->city})" : '');
+                            return [$p->id => mb_convert_encoding($label, 'UTF-8', 'UTF-8')];
+                        }),
+                        Unit::class => Unit::with('property')->get()->mapWithKeys(function ($u) {
+                            $label = "Einheit {$u->number}".($u->property ? " - {$u->property->name}" : '');
+                            return [$u->id => mb_convert_encoding($label, 'UTF-8', 'UTF-8')];
+                        }),
+                        Owner::class => Owner::all()->mapWithKeys(function ($o) {
+                            $label = $o->company_name ?: "{$o->first_name} {$o->last_name}";
+                            return [$o->id => mb_convert_encoding($label, 'UTF-8', 'UTF-8')];
+                        }),
                         default => [],
                     };
                 })
@@ -206,7 +233,7 @@ class DocumentResource extends Resource
                         if (! $record->documentable) {
                             return '-';
                         }
-                        if ($record->documentable instanceof Tenant) {
+                        if ($record->documentable instanceof Renter) {
                             return "Mieter: {$record->documentable->first_name} {$record->documentable->last_name}";
                         }
                         if ($record->documentable instanceof Property) {
@@ -224,32 +251,32 @@ class DocumentResource extends Resource
                     ->searchable(query: function (Builder $query, string $search): Builder {
                         return $query->where(function (Builder $q) use ($search) {
                             $q->where(function ($sub) use ($search) {
-                                $sub->where('documentable_type', Tenant::class)
-                                    ->whereIn('documentable_id', Tenant::where('first_name', 'like', "%{$search}%")
+                                $sub->where('documentable_type', Renter::class)
+                                    ->whereIn('documentable_id', Renter::where('first_name', 'like', "%{$search}%")
                                         ->orWhere('last_name', 'like', "%{$search}%")
                                         ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
                                         ->orWhere('email', 'like', "%{$search}%")
                                         ->pluck('id'));
                             })
-                            ->orWhere(function ($sub) use ($search) {
-                                $sub->where('documentable_type', Owner::class)
-                                    ->whereIn('documentable_id', Owner::where('first_name', 'like', "%{$search}%")
-                                        ->orWhere('last_name', 'like', "%{$search}%")
-                                        ->orWhere('company_name', 'like', "%{$search}%")
-                                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
-                                        ->orWhere('email', 'like', "%{$search}%")
-                                        ->pluck('id'));
-                            })
-                            ->orWhere(function ($sub) use ($search) {
-                                $sub->where('documentable_type', Property::class)
-                                    ->whereIn('documentable_id', Property::where('name', 'like', "%{$search}%")
-                                        ->orWhere('city', 'like', "%{$search}%")
-                                        ->pluck('id'));
-                            })
-                            ->orWhere(function ($sub) use ($search) {
-                                $sub->where('documentable_type', Unit::class)
-                                    ->whereIn('documentable_id', Unit::where('number', 'like', "%{$search}%")->pluck('id'));
-                            });
+                                ->orWhere(function ($sub) use ($search) {
+                                    $sub->where('documentable_type', Owner::class)
+                                        ->whereIn('documentable_id', Owner::where('first_name', 'like', "%{$search}%")
+                                            ->orWhere('last_name', 'like', "%{$search}%")
+                                            ->orWhere('company_name', 'like', "%{$search}%")
+                                            ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                                            ->orWhere('email', 'like', "%{$search}%")
+                                            ->pluck('id'));
+                                })
+                                ->orWhere(function ($sub) use ($search) {
+                                    $sub->where('documentable_type', Property::class)
+                                        ->whereIn('documentable_id', Property::where('name', 'like', "%{$search}%")
+                                            ->orWhere('city', 'like', "%{$search}%")
+                                            ->pluck('id'));
+                                })
+                                ->orWhere(function ($sub) use ($search) {
+                                    $sub->where('documentable_type', Unit::class)
+                                        ->whereIn('documentable_id', Unit::where('number', 'like', "%{$search}%")->pluck('id'));
+                                });
                         });
                     }),
                 Tables\Columns\TextColumn::make('version')->label('Version')->sortable(),
@@ -266,16 +293,16 @@ class DocumentResource extends Resource
                         'utility_bill' => 'Nebenkosten',
                         'protocol' => 'Protokoll',
                     ]),
-                Tables\Filters\SelectFilter::make('tenant_id')
+                Tables\Filters\SelectFilter::make('renter_id')
                     ->label('Mieter')
-                    ->options(fn () => Tenant::all()->mapWithKeys(fn ($t) => [$t->id => "{$t->last_name}, {$t->first_name}".($t->email ? " ({$t->email})" : '')]))
+                    ->options(fn () => Renter::all()->mapWithKeys(fn ($t) => [$t->id => "{$t->last_name}, {$t->first_name}".($t->email ? " ({$t->email})" : '')]))
                     ->searchable()
                     ->query(function (Builder $query, array $data): Builder {
                         if (empty($data['value'])) {
                             return $query;
                         }
 
-                        return $query->where('documentable_type', Tenant::class)->where('documentable_id', $data['value']);
+                        return $query->where('documentable_type', Renter::class)->where('documentable_id', $data['value']);
                     }),
                 Tables\Filters\SelectFilter::make('owner_id')
                     ->label('Eigentümer')
@@ -310,6 +337,7 @@ class DocumentResource extends Resource
 
                         return $query->where('documentable_type', Unit::class)->where('documentable_id', $data['value']);
                     }),
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Action::make('download')
@@ -319,9 +347,14 @@ class DocumentResource extends Resource
                     ->url(fn (Document $record): string => route('portal.documents.download', $record))
                     ->openUrlInNewTab(),
                 EditAction::make(),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 DeleteBulkAction::make(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ]);
     }
 

@@ -52,8 +52,8 @@
                                     PDF
                                 </div>
                                 <div>
-                                    <div style="font-weight: 600; color: #fff;">{{ $doc->filename }}</div>
-                                    <div style="font-size: 11px; color: var(--text-muted);">{{ $doc->mime_type ?? 'application/pdf' }}</div>
+                                    <div style="font-weight: 700; color: var(--text-main); font-size: 14px;">{{ $doc->filename }}</div>
+                                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ $doc->mime_type ?? 'application/pdf' }}</div>
                                 </div>
                             </div>
                         </td>

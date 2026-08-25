@@ -7,6 +7,7 @@ use App\Models\Property;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
+use Database\Seeders\InitialSetupSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +18,7 @@ class DocumentDownloadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\InitialSetupSeeder::class);
+        $this->seed(InitialSetupSeeder::class);
     }
 
     public function test_tenant_can_download_their_document(): void

@@ -20,7 +20,7 @@ class Ticket extends Model
         'status',
         'property_id',
         'unit_id',
-        'tenant_id',
+        'renter_id',
         'created_by',
         'assigned_to',
         'closed_at',
@@ -45,9 +45,14 @@ class Ticket extends Model
         return $this->belongsTo(Unit::class);
     }
 
+    public function renter()
+    {
+        return $this->belongsTo(Renter::class, 'renter_id');
+    }
+
     public function tenant()
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->renter();
     }
 
     public function creator()

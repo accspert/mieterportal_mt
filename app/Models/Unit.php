@@ -17,7 +17,7 @@ class Unit extends Model
         'area',
         'rooms',
         'status',
-        'current_tenant_id',
+        'current_renter_id',
     ];
 
     public function property()
@@ -25,9 +25,19 @@ class Unit extends Model
         return $this->belongsTo(Property::class);
     }
 
+    public function currentRenter()
+    {
+        return $this->belongsTo(Renter::class, 'current_renter_id');
+    }
+
     public function currentTenant()
     {
-        return $this->belongsTo(Tenant::class, 'current_tenant_id');
+        return $this->currentRenter();
+    }
+
+    public function renter()
+    {
+        return $this->currentRenter();
     }
 
     public function documents()

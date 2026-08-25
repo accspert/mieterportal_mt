@@ -6,7 +6,7 @@ use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Owner;
 use App\Models\Property;
-use App\Models\Tenant;
+use App\Models\Renter;
 use App\Models\Unit;
 use App\Notifications\DocumentCreatedNotification;
 
@@ -41,18 +41,18 @@ class DocumentObserver
 
     public function createInvoiceForDocument(Document $document): void
     {
-        $tenantId = null;
+        $renterId = null;
         $ownerId = null;
         $unitId = null;
 
-        if ($document->documentable_type === Tenant::class) {
-            $tenantId = $document->documentable_id;
-            $tenant = Tenant::find($tenantId);
-            $unitId = $tenant?->units()->first()?->id;
+        if ($document->documentable_type === Renter::class) {
+            $renterId = $document->documentable_id;
+            $renter = Renter::find($renterId);
+            $unitId = $renter?->units()->first()?->id;
         } elseif ($document->documentable_type === Unit::class) {
             $unit = Unit::find($document->documentable_id);
             $unitId = $unit?->id;
-            $tenantId = $unit?->current_tenant_id;
+            $renterId = $unit?->current_renter_id;
             $ownerId = $unit?->property?->owner_id ?? null;
         } elseif ($document->documentable_type === Owner::class) {
             $ownerId = $document->documentable_id;
@@ -61,7 +61,7 @@ class DocumentObserver
             $ownerId = $property?->owner_id ?? null;
         }
 
-        if ($tenantId || $ownerId) {
+        if ($renterId || $ownerId) {
             $invoiceNumber = 'RE-'.date('Y').'-'.str_pad((string) $document->id, 5, '0', STR_PAD_LEFT);
 
             $existing = Invoice::where('invoice_number', $invoiceNumber)
@@ -74,7 +74,7 @@ class DocumentObserver
             if (! $existing) {
                 Invoice::create([
                     'invoice_number' => $invoiceNumber,
-                    'tenant_id' => $tenantId,
+                    'renter_id' => $renterId,
                     'owner_id' => $ownerId,
                     'unit_id' => $unitId,
                     'amount' => $amount,
@@ -85,7 +85,7 @@ class DocumentObserver
                 ]);
             } else {
                 $existing->update([
-                    'tenant_id' => $tenantId ?: $existing->tenant_id,
+                    'renter_id' => $renterId ?: $existing->renter_id,
                     'owner_id' => $ownerId ?: $existing->owner_id,
                     'unit_id' => $unitId ?: $existing->unit_id,
                     'amount' => $document->amount !== null ? $document->amount : $existing->amount,
@@ -101,10 +101,10 @@ class DocumentObserver
     {
         $usersToNotify = collect();
 
-        if ($document->documentable_type === Tenant::class) {
-            $tenant = Tenant::with('user')->find($document->documentable_id);
-            if ($tenant?->user) {
-                $usersToNotify->push($tenant->user);
+        if ($document->documentable_type === Renter::class) {
+            $renter = Renter::with('user')->find($document->documentable_id);
+            if ($renter?->user) {
+                $usersToNotify->push($renter->user);
             }
         } elseif ($document->documentable_type === Owner::class) {
             $owner = Owner::with('user')->find($document->documentable_id);
@@ -112,22 +112,22 @@ class DocumentObserver
                 $usersToNotify->push($owner->user);
             }
         } elseif ($document->documentable_type === Unit::class) {
-            $unit = Unit::with(['currentTenant.user', 'property.owner.user'])->find($document->documentable_id);
-            if ($unit?->currentTenant?->user) {
-                $usersToNotify->push($unit->currentTenant->user);
+            $unit = Unit::with(['currentRenter.user', 'property.owner.user'])->find($document->documentable_id);
+            if ($unit?->currentRenter?->user) {
+                $usersToNotify->push($unit->currentRenter->user);
             }
             if ($unit?->property?->owner?->user) {
                 $usersToNotify->push($unit->property->owner->user);
             }
         } elseif ($document->documentable_type === Property::class) {
-            $property = Property::with(['owner.user', 'units.currentTenant.user'])->find($document->documentable_id);
+            $property = Property::with(['owner.user', 'units.currentRenter.user'])->find($document->documentable_id);
             if ($property?->owner?->user) {
                 $usersToNotify->push($property->owner->user);
             }
             if ($property?->units) {
                 foreach ($property->units as $u) {
-                    if ($u->currentTenant?->user) {
-                        $usersToNotify->push($u->currentTenant->user);
+                    if ($u->currentRenter?->user) {
+                        $usersToNotify->push($u->currentRenter->user);
                     }
                 }
             }

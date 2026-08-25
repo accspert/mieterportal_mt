@@ -17,8 +17,8 @@
                 <div class="card" style="padding: 18px; border-left: 3px solid {{ $msg->from_user_id === $user->id ? 'var(--color-primary-500)' : 'var(--color-accent-500)' }};">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                         <div>
-                            <div style="font-weight: 700; font-size: 15px; color: #fff;">{{ $msg->subject ?? 'Nachricht' }}</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">
+                            <div style="font-weight: 700; font-size: 15px; color: var(--text-main);">{{ $msg->subject ?? 'Nachricht' }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
                                 {{ $msg->from_user_id === $user->id ? 'Gesendet von Ihnen' : 'Von: ' . ($msg->sender->name ?? 'Hausverwaltung') }}
                                 &bull; {{ $msg->created_at->format('d.m.Y H:i') }}
                             </div>

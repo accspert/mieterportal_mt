@@ -14,18 +14,19 @@ class UnitController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $tenant = $user->tenant;
+        $renter = $user->renter;
+        $tenant = $renter;
         $owner = $user->owner;
 
         $units = collect();
         $properties = collect();
 
-        if ($tenant) {
-            $units = $tenant->units()->with(['property.owner'])->get();
+        if ($renter) {
+            $units = $renter->units()->with(['property.owner'])->get();
         }
 
         if ($owner) {
-            $properties = $owner->properties()->with(['units.currentTenant'])->get();
+            $properties = $owner->properties()->with(['units.currentRenter'])->get();
         }
 
         return view('portal.units.index', compact('user', 'tenant', 'owner', 'units', 'properties'));

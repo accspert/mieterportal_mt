@@ -7,14 +7,23 @@ use App\Models\User;
 
 class InvoicePolicy
 {
+    public function before(User $user, string $ability): ?bool
+    {
+        if ($user->hasRole('Administrator')) {
+            return true;
+        }
+
+        return null;
+    }
+
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('Sachbearbeiter') || $user->hasPermissionTo('manage invoices');
+        return $user->hasAnyRole(['Administrator', 'Sachbearbeiter']) || $user->hasPermissionTo('manage invoices');
     }
 
     public function view(User $user, Invoice $invoice): bool
     {
-        if ($invoice->tenant && $invoice->tenant->user_id === $user->id) {
+        if ($invoice->renter && $invoice->renter->user_id === $user->id) {
             return true;
         }
 
@@ -22,21 +31,31 @@ class InvoicePolicy
             return true;
         }
 
-        return $user->hasRole('Sachbearbeiter') || $user->hasPermissionTo('manage invoices');
+        return $user->hasAnyRole(['Administrator', 'Sachbearbeiter']) || $user->hasPermissionTo('manage invoices');
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole('Sachbearbeiter') || $user->hasPermissionTo('manage invoices');
+        return $user->hasAnyRole(['Administrator', 'Sachbearbeiter']) || $user->hasPermissionTo('manage invoices');
     }
 
     public function update(User $user, Invoice $invoice): bool
     {
-        return $user->hasRole('Sachbearbeiter') || $user->hasPermissionTo('manage invoices');
+        return $this->create($user);
     }
 
     public function delete(User $user, Invoice $invoice): bool
     {
-        return $user->hasRole('Sachbearbeiter') || $user->hasPermissionTo('manage invoices');
+        return $this->create($user);
+    }
+
+    public function restore(User $user, Invoice $invoice): bool
+    {
+        return $this->create($user);
+    }
+
+    public function forceDelete(User $user, Invoice $invoice): bool
+    {
+        return $this->create($user);
     }
 }

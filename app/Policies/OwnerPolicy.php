@@ -48,4 +48,14 @@ class OwnerPolicy
     {
         return $this->create($user);
     }
+
+    public function restore(User $user, Owner $owner): bool
+    {
+        return $this->create($user);
+    }
+
+    public function forceDelete(User $user, Owner $owner): bool
+    {
+        return $this->create($user);
+    }
 }

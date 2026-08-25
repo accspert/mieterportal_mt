@@ -9,8 +9,8 @@ use App\Filament\Resources\InvoiceResource;
 use App\Filament\Resources\MessageResource;
 use App\Filament\Resources\OwnerResource;
 use App\Filament\Resources\PropertyResource;
+use App\Filament\Resources\RenterResource;
 use App\Filament\Resources\TaskResource;
-use App\Filament\Resources\TenantResource;
 use App\Filament\Resources\TicketResource;
 use App\Filament\Resources\UnitResource;
 use App\Filament\Resources\UserResource;
@@ -21,7 +21,6 @@ use App\Filament\Widgets\TicketStatusChartWidget;
 use App\Http\Middleware\EnsureAdminPanelAccess;
 use App\Http\Middleware\SetLocale;
 use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
@@ -36,6 +35,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Stancl\Tenancy\Middleware\InitializeTenancyByDomainOrSubdomain;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -61,14 +62,14 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::USER_MENU_BEFORE,
                 fn () => new HtmlString(
                     '<div style="display:flex;align-items:center;margin-right:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px;">'.
-                    '<a href="'.route('locale.switch', 'de').'" style="padding:2px 6px;font-size:11px;font-weight:600;border-radius:4px;text-decoration:none;'.(app()->getLocale() === 'de' ? 'background:#2563eb;color:#fff;' : 'color:#94a3b8;').'">🇩🇪 DE</a>'.
-                    '<a href="'.route('locale.switch', 'en').'" style="padding:2px 6px;font-size:11px;font-weight:600;border-radius:4px;text-decoration:none;'.(app()->getLocale() === 'en' ? 'background:#2563eb;color:#fff;' : 'color:#94a3b8;').'">🇬🇧 EN</a>'.
+                    '<a href="'.route('locale.switch', 'de').'" style="padding:2px 6px;font-size:11px;font-weight:600;border-radius:4px;text-decoration:none;'.(app()->getLocale() === 'de' ? 'background:#2563eb;color:#fff;' : 'color:#94a3b8;').'">DE</a>'.
+                    '<a href="'.route('locale.switch', 'en').'" style="padding:2px 6px;font-size:11px;font-weight:600;border-radius:4px;text-decoration:none;'.(app()->getLocale() === 'en' ? 'background:#2563eb;color:#fff;' : 'color:#94a3b8;').'">EN</a>'.
                     '</div>'
                 )
             )
             ->userMenuItems([
                 MenuItem::make()
-                    ->label(fn () => app()->getLocale() === 'de' ? '🇬🇧 English' : '🇩🇪 Deutsch')
+                    ->label(fn () => app()->getLocale() === 'de' ? 'English' : 'Deutsch')
                     ->url(fn () => route('locale.switch', app()->getLocale() === 'de' ? 'en' : 'de'))
                     ->icon('heroicon-o-language'),
             ])
@@ -94,7 +95,7 @@ class AdminPanelProvider extends PanelProvider
                 OwnerResource::class,
                 PropertyResource::class,
                 UnitResource::class,
-                TenantResource::class,
+                RenterResource::class,
                 TicketResource::class,
                 DocumentResource::class,
                 MessageResource::class,
@@ -105,17 +106,18 @@ class AdminPanelProvider extends PanelProvider
                 ActivityResource::class,
             ])
             ->middleware([
+                InitializeTenancyByDomainOrSubdomain::class,
+                PreventAccessFromCentralDomains::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                SetLocale::class,
-                EnsureAdminPanelAccess::class,
-                AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                SetLocale::class,
+                EnsureAdminPanelAccess::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

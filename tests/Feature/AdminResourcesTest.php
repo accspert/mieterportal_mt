@@ -16,6 +16,8 @@ use App\Models\Unit;
 use App\Models\User;
 use Database\Seeders\InitialSetupSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -130,8 +132,8 @@ class AdminResourcesTest extends TestCase
 
         $this->actingAs($this->admin);
 
-        \Illuminate\Support\Facades\Storage::fake('public');
-        $fakeFile = \Illuminate\Http\UploadedFile::fake()->create('Mietvertrag_2026.pdf', 100, 'application/pdf');
+        Storage::fake('public');
+        $fakeFile = UploadedFile::fake()->create('Mietvertrag_2026.pdf', 100, 'application/pdf');
 
         Livewire::test(CreateDocument::class)
             ->fillForm([

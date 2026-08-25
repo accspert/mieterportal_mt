@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('status', 50)->default('open');
             $table->foreignId('property_id')->nullable()->constrained('properties')->nullOnDelete();
             $table->foreignId('unit_id')->nullable()->constrained('units')->nullOnDelete();
-            $table->foreignId('tenant_id')->nullable()->constrained('tenants')->nullOnDelete();
+            $table->foreignId('renter_id')->nullable()->constrained('renters')->nullOnDelete();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('closed_at')->nullable();

@@ -7,8 +7,8 @@ use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Message;
 use App\Models\Property;
+use App\Models\Renter;
 use App\Models\Task;
-use App\Models\Tenant;
 use App\Models\Ticket;
 use App\Models\Unit;
 use App\Models\User;
@@ -17,8 +17,8 @@ use App\Policies\DocumentPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\MessagePolicy;
 use App\Policies\PropertyPolicy;
+use App\Policies\RenterPolicy;
 use App\Policies\TaskPolicy;
-use App\Policies\TenantPolicy;
 use App\Policies\TicketPolicy;
 use App\Policies\UnitPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -34,7 +34,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         Property::class => PropertyPolicy::class,
         Unit::class => UnitPolicy::class,
-        Tenant::class => TenantPolicy::class,
+        Renter::class => RenterPolicy::class,
         Document::class => DocumentPolicy::class,
         Ticket::class => TicketPolicy::class,
         Message::class => MessagePolicy::class,

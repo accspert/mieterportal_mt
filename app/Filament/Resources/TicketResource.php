@@ -9,14 +9,21 @@ use App\Services\CsvExportService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
@@ -142,9 +149,9 @@ class TicketResource extends Resource
                 ->preload()
                 ->nullable(),
 
-            Forms\Components\Select::make('tenant_id')
+            Forms\Components\Select::make('renter_id')
                 ->label('Gemeldet von (Mieter)')
-                ->relationship('tenant', 'first_name')
+                ->relationship('renter', 'first_name')
                 ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->first_name} {$record->last_name}")
                 ->searchable()
                 ->preload()
@@ -176,10 +183,10 @@ class TicketResource extends Resource
                     ->color('primary')
                     ->default('-')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('tenant.first_name')
+                Tables\Columns\TextColumn::make('renter.last_name')
                     ->label('Mietername')
-                    ->formatStateUsing(fn ($record) => $record->tenant ? "{$record->tenant->first_name} {$record->tenant->last_name}" : ($record->creator?->name ?? '-'))
-                    ->description(fn ($record) => $record->tenant?->phone ? "Tel: {$record->tenant->phone}" : ($record->tenant?->email ?? null))
+                    ->formatStateUsing(fn ($record) => $record->renter ? "{$record->renter->first_name} {$record->renter->last_name}" : ($record->creator?->name ?? '-'))
+                    ->description(fn ($record) => $record->renter?->phone ? "Tel: {$record->renter->phone}" : ($record->renter?->email ?? null))
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('priority')
@@ -228,10 +235,11 @@ class TicketResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->label('Erstellt am')->dateTime('d.m.Y H:i')->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\Filter::make('my_tickets')
                     ->label('Nur meine zugewiesenen Tickets')
-                    ->query(fn (\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder => $query->where('assigned_to', auth()->id())),
+                    ->query(fn (Builder $query): Builder => $query->where('assigned_to', auth()->id())),
                 Tables\Filters\SelectFilter::make('assigned_to')
                     ->label('Sachbearbeiter')
                     ->relationship('assignee', 'name'),
@@ -263,6 +271,7 @@ class TicketResource extends Resource
                         'billing' => 'Abrechnung',
                         'other' => 'Sonstiges',
                     ]),
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->headerActions([
                 Action::make('exportCsv')
@@ -290,6 +299,9 @@ class TicketResource extends Resource
             ])
             ->actions([
                 EditAction::make(),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 BulkAction::make('updateStatus')
@@ -357,6 +369,8 @@ class TicketResource extends Resource
                         return $exportService->streamCsv('tickets_auswahl_'.date('Y-m-d').'.csv', $headers, $rows);
                     }),
                 DeleteBulkAction::make(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ]);
     }
 
