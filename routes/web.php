@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Central\TenantRegistrationController;
 use App\Http\Controllers\LocaleController;
 use App\Models\CompanyTenant;
 use Illuminate\Support\Facades\Route;
@@ -23,3 +24,5 @@ Route::get('/', function () {
         'tenants' => $tenants,
     ]);
 })->name('central.home');
+
+Route::post('api/onboard', [TenantRegistrationController::class, 'store'])->name('tenants.onboard');

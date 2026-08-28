@@ -16,18 +16,21 @@ class AuthController extends Controller
         if (Auth::check()) {
             $user = Auth::user();
             if ($user->hasRole('Administrator') || $user->hasRole('Sachbearbeiter')) {
-                return redirect('/admin');
+                return $this->adminRedirect();
             }
 
             return redirect()->route('portal.dashboard');
         }
 
-        $demoUsers = [
-            'tenant' => User::where('email', 'tenant@kundenportal.local')->first(),
-            'owner' => User::where('email', 'owner@kundenportal.local')->first(),
-            'staff' => User::where('email', 'staff@kundenportal.local')->first(),
-            'admin' => User::where('email', 'admin@kundenportal.local')->first(),
+        $demoEmails = [
+            'tenant' => 'tenant@kundenportal.local',
+            'owner' => 'owner@kundenportal.local',
+            'staff' => 'staff@kundenportal.local',
+            'admin' => 'admin@kundenportal.local',
         ];
+
+        $found = User::whereIn('email', $demoEmails)->get()->keyBy('email');
+        $demoUsers = array_map(fn (string $email) => $found->get($email), $demoEmails);
 
         return view('portal.auth.login', compact('demoUsers'));
     }
@@ -46,7 +49,7 @@ class AuthController extends Controller
             $user = Auth::user();
 
             if ($user->hasRole('Administrator') || $user->hasRole('Sachbearbeiter')) {
-                return redirect()->intended('/admin');
+                return redirect()->intended($this->adminPath());
             }
 
             return redirect()->intended(route('portal.dashboard'));
@@ -64,5 +67,19 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('portal.login')->with('success', 'Sie wurden erfolgreich abgemeldet.');
+    }
+
+    /**
+     * The Filament admin panel base path.
+     * Centralised here so it only needs changing in one place.
+     */
+    private function adminPath(): string
+    {
+        return config('filament.path', '/admin');
+    }
+
+    private function adminRedirect(): RedirectResponse
+    {
+        return redirect($this->adminPath());
     }
 }

@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Portal\Concerns\ResolvesUserProfile;
 use App\Models\Owner;
-use App\Models\Property;
-use App\Models\Renter;
 use App\Models\Ticket;
-use App\Models\Unit;
 use App\Models\User;
 use App\Services\FileUploadService;
+use App\Services\TicketService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,13 +16,15 @@ use Illuminate\View\View;
 
 class TicketController extends Controller
 {
+    use ResolvesUserProfile;
+
     public function index(Request $request): View
     {
         /** @var User $user */
         $user = Auth::user();
-        $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
+        $renter = $this->resolveRenter($user);
         $tenant = $renter;
-        $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
+        $owner = $this->resolveOwner($user);
 
         $query = Ticket::query()->with(['property', 'unit', 'assignee', 'renter']);
 
@@ -62,9 +63,9 @@ class TicketController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
+        $renter = $this->resolveRenter($user);
         $tenant = $renter;
-        $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
+        $owner = $this->resolveOwner($user);
 
         $availableUnits = collect();
         $availableProperties = collect();
@@ -80,11 +81,11 @@ class TicketController extends Controller
         return view('portal.tickets.create', compact('user', 'tenant', 'owner', 'availableUnits', 'availableProperties'));
     }
 
-    public function store(Request $request, FileUploadService $uploadService): RedirectResponse
+    public function store(Request $request, FileUploadService $uploadService, TicketService $ticketService): RedirectResponse
     {
         /** @var User $user */
         $user = Auth::user();
-        $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
+        $renter = $this->resolveRenter($user);
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -97,52 +98,13 @@ class TicketController extends Controller
             'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx'],
         ]);
 
-        $unitId = $validated['unit_id'] ?? null;
-        if (! $unitId && $renter && $renter->units()->count() === 1) {
-            $unitId = $renter->units()->first()->id;
-        }
-
-        $propertyId = $validated['property_id'] ?? null;
-        if ($unitId) {
-            $unit = Unit::with('property')->find($unitId);
-            $propertyId = $unit?->property_id ?? $propertyId;
-        }
-
-        // Automatic Sachbearbeiter assignment:
-        // 1. Check if renter has a dedicated assigned manager
-        // 2. Check if property has an assigned manager
-        // 3. Fallback to first available Sachbearbeiter or Admin
-        $assignedTo = $renter?->manager_id;
-
-        if (! $assignedTo && $propertyId) {
-            $property = Property::find($propertyId);
-            $assignedTo = $property?->manager_id;
-        }
-
-        if (! $assignedTo) {
-            $assignedTo = User::role('Sachbearbeiter')->first()?->id ?? User::role('Administrator')->first()?->id;
-        }
-
-        $ticket = Ticket::create([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'category' => $validated['category'],
-            'priority' => $validated['priority'],
-            'status' => 'open',
-            'property_id' => $propertyId,
-            'unit_id' => $unitId,
-            'renter_id' => $renter?->id,
-            'created_by' => $user->id,
-            'assigned_to' => $assignedTo,
-        ]);
+        $ticket = $ticketService->createFromPortal($validated, $user, $renter);
 
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
                 $uploadService->storeAttachment($file, $ticket, $user);
             }
         }
-
-        event(new \App\Events\TicketCreated($ticket));
 
         return redirect()->route('portal.tickets.show', $ticket)
             ->with('success', 'Ihre Schadensmeldung wurde erfolgreich übermittelt und dem zuständigen Sachbearbeiter zugewiesen.');
@@ -152,8 +114,8 @@ class TicketController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
-        $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
+        $renter = $this->resolveRenter($user);
+        $owner = $this->resolveOwner($user);
 
         // Strict authorization check: Only own tickets or authorized staff/owner
         $isCreator = ($ticket->created_by === $user->id);

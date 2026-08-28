@@ -29,3 +29,6 @@ login.html
 /database/*.sqlite
 /database/*.sqlite-journal
 /database/tenant_*
+~$*
+/Rechnung-*.pdf
+

@@ -271,14 +271,14 @@ class TicketResource extends Resource
                         'billing' => 'Abrechnung',
                         'other' => 'Sonstiges',
                     ]),
-                Tables\Filters\TrashedFilter::make(),
+                TrashedFilter::make(),
             ])
             ->headerActions([
                 Action::make('exportCsv')
                     ->label('CSV Export')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(function (CsvExportService $exportService) {
-                        $tickets = Ticket::with(['property', 'tenant', 'assignee'])->latest()->get();
+                        $tickets = Ticket::with(['property', 'renter', 'assignee'])->latest()->get();
                         $headers = ['Ticket ID', 'Titel', 'Kategorie', 'Dringlichkeit', 'Status', 'Objekt', 'Mieter', 'Zustaendig', 'Erstellt am'];
                         $rows = $tickets->map(function ($ticket) {
                             return [
@@ -288,7 +288,7 @@ class TicketResource extends Resource
                                 $ticket->priority,
                                 $ticket->status,
                                 $ticket->property?->name ?? '-',
-                                $ticket->tenant ? "{$ticket->tenant->first_name} {$ticket->tenant->last_name}" : '-',
+                                $ticket->renter ? "{$ticket->renter->first_name} {$ticket->renter->last_name}" : '-',
                                 $ticket->assignee?->name ?? '-',
                                 $ticket->created_at->format('d.m.Y H:i'),
                             ];
@@ -360,7 +360,7 @@ class TicketResource extends Resource
                                 $ticket->priority,
                                 $ticket->status,
                                 $ticket->property?->name ?? '-',
-                                $ticket->tenant ? "{$ticket->tenant->first_name} {$ticket->tenant->last_name}" : '-',
+                                $ticket->renter ? "{$ticket->renter->first_name} {$ticket->renter->last_name}" : '-',
                                 $ticket->assignee?->name ?? '-',
                                 $ticket->created_at->format('d.m.Y H:i'),
                             ];

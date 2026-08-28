@@ -25,11 +25,6 @@ class FilamentServiceProvider extends ServiceProvider
                     'Administration',
                 ]);
 
-                // Render the brand partial into Filament's brand slot if present
-                Filament::registerRenderHook('brand', function () {
-                    return view('filament.brand')->render();
-                });
-
                 Filament::registerRenderHook('global-search.results', function () {
                     return null;
                 });

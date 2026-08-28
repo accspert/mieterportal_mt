@@ -5,12 +5,12 @@
 
 @section('content')
 <div style="max-width: 760px; margin: 0 auto;">
-    <div style="margin-bottom: 24px;">
-        <a href="{{ route('portal.tickets.index') }}" class="btn btn-outline" style="font-size: 12px; padding: 5px 12px; margin-bottom: 12px;">
+    <div class="mb-5">
+        <a href="{{ route('portal.tickets.index') }}" class="btn btn-outline btn-xs mb-3">
             &larr; Zurück zur Übersicht
         </a>
-        <h1 style="font-size: 24px; margin-bottom: 6px;">Schaden oder Service-Anliegen melden</h1>
-        <p style="color: var(--text-muted); font-size: 14px;">Bitte beschreiben Sie das Problem so genau wie möglich, damit wir schnell handeln können.</p>
+        <h1 class="text-3xl mb-2">Schaden oder Service-Anliegen melden</h1>
+        <p class="section-subtitle">Bitte beschreiben Sie das Problem so genau wie möglich, damit wir schnell handeln können.</p>
     </div>
 
     <div class="card">
@@ -64,8 +64,8 @@
                             </option>
                         @endforeach
                     </select>
-                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">
-                        <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 14px; height: 14px; display: inline-block; vertical-align: -2px;">
+                    <div class="d-flex flex-center gap-2 text-sm text-muted" style="margin-top: 5px;">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon-xs flex-shrink-0">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                         </svg>
                         Das Gebäude, die Wohnung und Ihr Name werden automatisch an den zuständigen Sachbearbeiter übermittelt.
@@ -92,10 +92,10 @@
             <div class="form-group">
                 <label class="form-label" for="attachments">Fotos / Belege / Dokumente anhängen (optional)</label>
                 <input type="file" id="attachments" name="attachments[]" class="form-control" multiple accept="image/*,.pdf,.doc,.docx">
-                <div style="font-size: 11px; color: var(--text-faint); margin-top: 4px;">Unterstützte Formate: JPG, PNG, WEBP, PDF (max. 10 MB pro Datei)</div>
+                <div class="text-xs text-faint" style="margin-top: 4px;">Unterstützte Formate: JPG, PNG, WEBP, PDF (max. 10 MB pro Datei)</div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+            <div class="d-flex gap-4" style="justify-content: flex-end; margin-top: 24px;">
                 <a href="{{ route('portal.tickets.index') }}" class="btn btn-outline">Abbrechen</a>
                 <button type="submit" class="btn btn-primary">
                     <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

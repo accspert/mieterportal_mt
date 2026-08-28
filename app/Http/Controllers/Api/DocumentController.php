@@ -7,6 +7,11 @@ use App\Http\Requests\Api\StoreDocumentRequest;
 use App\Http\Requests\Api\UpdateDocumentRequest;
 use App\Http\Resources\DocumentResource;
 use App\Models\Document;
+use App\Models\Owner;
+use App\Models\Property;
+use App\Models\Renter;
+use App\Models\Tenant;
+use App\Models\Unit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -21,7 +26,35 @@ class DocumentController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        $user = $request->user();
         $query = Document::query();
+
+        // Non-admin users may only see their own documents (same logic as Portal).
+        if (! $user->hasAnyRole(['Administrator', 'Sachbearbeiter'])) {
+            $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
+            $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
+
+            if ($renter) {
+                $unitIds = $renter->units()->pluck('id')->toArray();
+                $propertyIds = $renter->units()->pluck('property_id')->filter()->unique()->toArray();
+
+                $query->where(function ($q) use ($renter, $unitIds, $propertyIds) {
+                    $q->where(fn ($s) => $s->whereIn('documentable_type', [Renter::class, Tenant::class, 'App\\Models\\Tenant'])->where('documentable_id', $renter->id))
+                        ->orWhere(fn ($s) => $s->where('documentable_type', Unit::class)->whereIn('documentable_id', $unitIds))
+                        ->orWhere(fn ($s) => $s->where('documentable_type', Property::class)->whereIn('documentable_id', $propertyIds));
+                });
+            } elseif ($owner) {
+                $propertyIds = $owner->properties()->pluck('id')->toArray();
+
+                $query->where(function ($q) use ($owner, $propertyIds) {
+                    $q->where(fn ($s) => $s->where('documentable_type', Owner::class)->where('documentable_id', $owner->id))
+                        ->orWhere(fn ($s) => $s->where('documentable_type', Property::class)->whereIn('documentable_id', $propertyIds));
+                });
+            } else {
+                // No renter/owner profile → return empty result set.
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         if ($category = $request->get('category')) {
             $query->where('category', $category);

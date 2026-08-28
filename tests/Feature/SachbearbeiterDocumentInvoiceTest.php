@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Resources\TenantResource\Pages\EditTenant;
-use App\Filament\Resources\TenantResource\Pages\ListTenants;
-use App\Filament\Resources\TenantResource\RelationManagers\DocumentsRelationManager;
-use App\Filament\Resources\TenantResource\RelationManagers\InvoicesRelationManager;
+use App\Filament\Resources\RenterResource\Pages\EditRenter;
+use App\Filament\Resources\RenterResource\Pages\ListRenters;
+use App\Filament\Resources\RenterResource\RelationManagers\DocumentsRelationManager;
+use App\Filament\Resources\RenterResource\RelationManagers\InvoicesRelationManager;
 use App\Models\Owner;
 use App\Models\Property;
 use App\Models\Tenant;
@@ -66,7 +66,7 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
     public function test_sachbearbeiter_can_access_tenant_edit_page_with_relation_managers(): void
     {
         $this->actingAs($this->staff)
-            ->get("/admin/tenants/{$this->tenant->id}/edit")
+            ->get("/admin/renters/{$this->tenant->id}/edit")
             ->assertStatus(200);
     }
 
@@ -76,7 +76,7 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
         $fakeFile = UploadedFile::fake()->create('Mietvertrag_Max_Mustermann.pdf', 200, 'application/pdf');
 
         Livewire::actingAs($this->staff)
-            ->test(ListTenants::class)
+            ->test(ListRenters::class)
             ->callTableAction('uploadDocument', $this->tenant, data: [
                 'filename' => 'Mietvertrag_Max_Mustermann.pdf',
                 'category' => 'contract',
@@ -87,7 +87,6 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
         $this->assertDatabaseHas('documents', [
             'filename' => 'Mietvertrag_Max_Mustermann.pdf',
             'category' => 'contract',
-            'documentable_type' => Tenant::class,
             'documentable_id' => $this->tenant->id,
             'uploaded_by' => $this->staff->id,
         ]);
@@ -99,7 +98,7 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
         $fakePdf = UploadedFile::fake()->create('Nebenkosten_2025.pdf', 150, 'application/pdf');
 
         Livewire::actingAs($this->staff)
-            ->test(ListTenants::class)
+            ->test(ListRenters::class)
             ->callTableAction('createInvoice', $this->tenant, data: [
                 'invoice_number' => 'RE-2026-TEST-999',
                 'unit_id' => $this->unit->id,
@@ -113,7 +112,7 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
 
         $this->assertDatabaseHas('invoices', [
             'invoice_number' => 'RE-2026-TEST-999',
-            'tenant_id' => $this->tenant->id,
+            'renter_id' => $this->tenant->id,
             'amount' => 320.00,
             'status' => 'sent',
         ]);
@@ -127,7 +126,7 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
         Livewire::actingAs($this->staff)
             ->test(DocumentsRelationManager::class, [
                 'ownerRecord' => $this->tenant,
-                'pageClass' => EditTenant::class,
+                'pageClass' => EditRenter::class,
             ])
             ->callTableAction('create', data: [
                 'filename' => 'Wohnungsuebergabe.pdf',
@@ -140,7 +139,6 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
         $this->assertDatabaseHas('documents', [
             'filename' => 'Wohnungsuebergabe.pdf',
             'category' => 'protocol',
-            'documentable_type' => Tenant::class,
             'documentable_id' => $this->tenant->id,
             'uploaded_by' => $this->staff->id,
         ]);
@@ -151,7 +149,7 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
         Livewire::actingAs($this->staff)
             ->test(InvoicesRelationManager::class, [
                 'ownerRecord' => $this->tenant,
-                'pageClass' => EditTenant::class,
+                'pageClass' => EditRenter::class,
             ])
             ->callTableAction('create', data: [
                 'invoice_number' => 'RE-2026-REL-001',
@@ -164,7 +162,7 @@ class SachbearbeiterDocumentInvoiceTest extends TestCase
 
         $this->assertDatabaseHas('invoices', [
             'invoice_number' => 'RE-2026-REL-001',
-            'tenant_id' => $this->tenant->id,
+            'renter_id' => $this->tenant->id,
             'amount' => 450.00,
             'status' => 'sent',
         ]);

@@ -38,7 +38,7 @@ Route::middleware([
         if (auth()->check()) {
             $user = auth()->user();
             if ($user->hasRole('Administrator') || $user->hasRole('Sachbearbeiter')) {
-                return redirect('/admin');
+                return redirect(config('filament.path', '/admin'));
             }
 
             return redirect()->route('portal.dashboard');
@@ -58,7 +58,7 @@ Route::middleware([
 
         // Authenticated Routes inside Tenant DB
         Route::middleware('auth')->group(function () {
-            Route::get('/', fn() => redirect()->route('portal.dashboard'));
+            Route::get('/', fn () => redirect()->route('portal.dashboard'));
             Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
             Route::get('units', [UnitController::class, 'index'])->name('units.index');
 

@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Portal\Concerns\ResolvesUserProfile;
 use App\Models\Invoice;
-use App\Models\Owner;
-use App\Models\Renter;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\InvoicePdfService;
@@ -17,12 +16,14 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class InvoiceController extends Controller
 {
+    use ResolvesUserProfile;
+
     public function index(Request $request): View
     {
         /** @var User $user */
         $user = Auth::user();
-        $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
-        $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
+        $renter = $this->resolveRenter($user);
+        $owner = $this->resolveOwner($user);
 
         $query = Invoice::query()->with(['unit', 'renter', 'owner']);
 
@@ -74,8 +75,8 @@ class InvoiceController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $renter = $user->renter;
-        $owner = $user->owner;
+        $renter = $this->resolveRenter($user);
+        $owner = $this->resolveOwner($user);
 
         $authorized = ($renter && $invoice->renter_id === $renter->id) ||
             ($owner && $invoice->owner_id === $owner->id) ||

@@ -11,7 +11,7 @@ class InvoicePdfService
 {
     public function generatePdf(Invoice $invoice): DomPdfWrapper
     {
-        $invoice->load(['tenant', 'owner', 'unit.property']);
+        $invoice->load(['renter', 'owner', 'unit.property']);
 
         return Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,

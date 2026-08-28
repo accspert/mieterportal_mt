@@ -23,7 +23,7 @@ class InvoiceController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Invoice::query()->with(['tenant', 'owner', 'unit']);
+        $query = Invoice::query()->with(['renter', 'owner', 'unit']);
 
         if ($status = $request->get('status')) {
             $query->where('status', $status);
@@ -42,14 +42,14 @@ class InvoiceController extends Controller
     public function store(StoreInvoiceRequest $request): InvoiceResource
     {
         $invoice = Invoice::create($request->validated());
-        $invoice->load(['tenant', 'owner', 'unit']);
+        $invoice->load(['renter', 'owner', 'unit']);
 
         return new InvoiceResource($invoice);
     }
 
     public function show(Invoice $invoice): InvoiceResource
     {
-        $invoice->load(['tenant', 'owner', 'unit']);
+        $invoice->load(['renter', 'owner', 'unit']);
 
         return new InvoiceResource($invoice);
     }
@@ -57,7 +57,7 @@ class InvoiceController extends Controller
     public function update(UpdateInvoiceRequest $request, Invoice $invoice): InvoiceResource
     {
         $invoice->update($request->validated());
-        $invoice->load(['tenant', 'owner', 'unit']);
+        $invoice->load(['renter', 'owner', 'unit']);
 
         return new InvoiceResource($invoice);
     }

@@ -18,11 +18,15 @@ class TicketStatusChartWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $open = Ticket::where('status', 'open')->count();
-        $inProgress = Ticket::where('status', 'in_progress')->count();
-        $waiting = Ticket::where('status', 'waiting')->count();
-        $resolved = Ticket::whereIn('status', ['resolved', 'done'])->count();
-        $closed = Ticket::where('status', 'closed')->count();
+        $counts = Ticket::select('status', \Illuminate\Support\Facades\DB::raw('count(*) as aggregate'))
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $open = (int) ($counts['open'] ?? 0);
+        $inProgress = (int) ($counts['in_progress'] ?? 0);
+        $waiting = (int) ($counts['waiting'] ?? 0);
+        $resolved = (int) (($counts['resolved'] ?? 0) + ($counts['done'] ?? 0));
+        $closed = (int) ($counts['closed'] ?? 0);
 
         return [
             'datasets' => [

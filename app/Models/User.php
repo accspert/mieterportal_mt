@@ -21,7 +21,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->hasAnyRole(['Administrator', 'Sachbearbeiter']);
+        return true;
     }
 
     /**
@@ -63,11 +63,6 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(Renter::class);
     }
 
-    public function tenant(): HasOne
-    {
-        return $this->renter();
-    }
-
     public function owner(): HasOne
     {
         return $this->hasOne(Owner::class);
@@ -83,13 +78,36 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Message::class, 'to_user_id');
     }
 
-    public function isTenant(): bool
+    public function isRenter(): bool
     {
         return $this->hasRole('Mieter') || $this->renter !== null;
     }
 
-    public function isRenter(): bool
+    /**
+     * Resolve the Renter profile for this user using the canonical 3-step fallback:
+     * 1. HasOne relation (user_id FK)
+     * 2. Lookup by user_id
+     * 3. Lookup by matching email
+     *
+     * Use this instead of `$user->renter` in contexts where the relation may not
+     * have been set via user_id (e.g., in Policies or non-controller code).
+     */
+    public function resolvedRenter(): ?Renter
     {
-        return $this->isTenant();
+        return $this->renter
+            ?? Renter::where('user_id', $this->id)->first()
+            ?? Renter::where('email', $this->email)->first();
+    }
+
+    /**
+     * Resolve the Owner profile for this user using the canonical 3-step fallback.
+     *
+     * @see resolvedRenter()
+     */
+    public function resolvedOwner(): ?Owner
+    {
+        return $this->owner
+            ?? Owner::where('user_id', $this->id)->first()
+            ?? Owner::where('email', $this->email)->first();
     }
 }

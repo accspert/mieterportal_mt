@@ -4,6 +4,8 @@ namespace Tests;
 
 use App\Policies\PropertyPolicy;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Stancl\Tenancy\Middleware\InitializeTenancyByDomainOrSubdomain;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 /**
  * Base test case for Pest/PHPUnit tests.
@@ -16,4 +18,16 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 abstract class TestCase extends BaseTestCase
 {
     protected ?PropertyPolicy $policy = null;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+
+        $this->withoutMiddleware([
+            InitializeTenancyByDomainOrSubdomain::class,
+            PreventAccessFromCentralDomains::class,
+        ]);
+    }
 }

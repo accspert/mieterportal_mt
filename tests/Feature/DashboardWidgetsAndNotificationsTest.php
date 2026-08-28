@@ -76,6 +76,7 @@ class DashboardWidgetsAndNotificationsTest extends TestCase
 
     public function test_tenant_can_mark_notifications_as_read(): void
     {
+        $this->tenantUser->unreadNotifications()->delete();
         $ticket = Ticket::first();
         $this->tenantUser->notify(new TicketStatusUpdatedNotification($ticket, 'open'));
 

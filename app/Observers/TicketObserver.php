@@ -11,7 +11,7 @@ class TicketObserver
     {
         if ($ticket->isDirty('status')) {
             $previousStatus = $ticket->getOriginal('status') ?? 'open';
-            $recipient = $ticket->creator ?: ($ticket->tenant?->user);
+            $recipient = $ticket->creator ?: ($ticket->renter?->user);
 
             if ($recipient) {
                 $recipient->notify(new TicketStatusUpdatedNotification($ticket, $previousStatus));

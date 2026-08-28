@@ -5,18 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Mieterportal') — Immobilienverwaltung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="{{ asset('css/portal.css') }}">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'><path d='M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z'/><path d='M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.432z'/></svg>">
     <script>
         (function() {
-            const saved = localStorage.getItem('portal_theme');
-            if (saved === 'light' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)) {
-                document.documentElement.setAttribute('data-theme', 'light');
-                document.documentElement.classList.add('light');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.documentElement.classList.remove('light');
-            }
+            const savedTheme = localStorage.getItem('theme') || 'system';
+            const isDark = savedTheme === 'dark' || (savedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', isDark);
+            document.documentElement.classList.toggle('light', !isDark);
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
         })();
     </script>
     <style>
@@ -217,15 +216,24 @@
                     </a>
                 </div>
 
-                <!-- Theme Toggle Button -->
-                <button type="button" class="btn btn-outline" style="padding: 7px 10px;" onclick="togglePortalTheme()" title="Design-Modus umschalten (Hell/Dunkel)">
-                    <svg id="theme-icon-sun" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px; display: none;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                    </svg>
-                    <svg id="theme-icon-moon" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-                    </svg>
-                </button>
+                <!-- Theme Switcher (Matches Admin / Filament Theme Switcher) -->
+                <div class="theme-switch-group" role="group" aria-label="Theme switcher">
+                    <button type="button" class="theme-switch-btn" data-theme-val="light" onclick="setPortalTheme('light')" title="{{ __('Hell (Light Mode)') }}">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                        </svg>
+                    </button>
+                    <button type="button" class="theme-switch-btn" data-theme-val="dark" onclick="setPortalTheme('dark')" title="{{ __('Dunkel (Dark Mode)') }}">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                        </svg>
+                    </button>
+                    <button type="button" class="theme-switch-btn" data-theme-val="system" onclick="setPortalTheme('system')" title="{{ __('System (Automatisch)') }}">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3" />
+                        </svg>
+                    </button>
+                </div>
 
                 @if(auth()->user()->hasAnyRole(['Administrator', 'Sachbearbeiter']))
                     <a href="/admin" class="btn btn-secondary" style="font-size: 13px;">
@@ -319,35 +327,37 @@
 </div>
 
 <script>
-    function updateThemeIcons() {
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light' || document.documentElement.classList.contains('light');
-        const sun = document.getElementById('theme-icon-sun');
-        const moon = document.getElementById('theme-icon-moon');
-        if (sun && moon) {
-            sun.style.display = isLight ? 'none' : 'block';
-            moon.style.display = isLight ? 'block' : 'none';
-        }
-    }
-
-    function togglePortalTheme() {
-        const current = document.documentElement.getAttribute('data-theme') || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
-        const newTheme = current === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        if (newTheme === 'light') {
-            document.documentElement.classList.add('light');
-        } else {
-            document.documentElement.classList.remove('light');
-        }
-        localStorage.setItem('portal_theme', newTheme);
-        updateThemeIcons();
-    }
-
-    updateThemeIcons();
-
     if (window.innerWidth <= 900) {
         const toggleBtn = document.getElementById('sidebar-toggle');
         if (toggleBtn) toggleBtn.style.display = 'inline-flex';
     }
+
+    // Theme Switcher Logic
+    function updateThemeButtons(theme) {
+        document.querySelectorAll('.theme-switch-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-theme-val') === theme);
+        });
+    }
+
+    function setPortalTheme(theme) {
+        localStorage.setItem('theme', theme);
+        const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.classList.toggle('light', !isDark);
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        updateThemeButtons(theme);
+    }
+
+    // Initialize active theme button state on load
+    const currentTheme = localStorage.getItem('theme') || 'system';
+    updateThemeButtons(currentTheme);
+
+    // Listen for OS color scheme changes if set to system
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if ((localStorage.getItem('theme') || 'system') === 'system') {
+            setPortalTheme('system');
+        }
+    });
 
     // Close dropdown menus on outer click
     document.addEventListener('click', function(e) {

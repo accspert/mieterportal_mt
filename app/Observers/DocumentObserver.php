@@ -9,9 +9,22 @@ use App\Models\Property;
 use App\Models\Renter;
 use App\Models\Unit;
 use App\Notifications\DocumentCreatedNotification;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentObserver
 {
+    public function saving(Document $document): void
+    {
+        if ($document->path && Storage::disk('public')->exists($document->path)) {
+            if (empty($document->size)) {
+                $document->size = Storage::disk('public')->size($document->path);
+            }
+            if (empty($document->mime_type)) {
+                $document->mime_type = Storage::disk('public')->mimeType($document->path) ?: 'application/octet-stream';
+            }
+        }
+    }
+
     public function created(Document $document): void
     {
         // 1. If document is an invoice or utility bill, create/sync Invoice record for the Invoices table

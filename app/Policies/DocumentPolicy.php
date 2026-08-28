@@ -3,7 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Document;
+use App\Models\Owner;
 use App\Models\Property;
+use App\Models\Renter;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
@@ -30,19 +32,64 @@ class DocumentPolicy
             return true;
         }
 
-        // Owner, tenant or staff with permission can view
-        $doc = $document->documentable;
+        return $this->userOwnsDocument($user, $document);
+    }
 
-        if ($doc instanceof Property && $doc->owner && $doc->owner->user_id === $user->id) {
+    /**
+     * Dedicated download check – applies the same ownership logic as view().
+     */
+    public function download(User $user, Document $document): bool
+    {
+        if ($user->hasAnyRole(['Administrator', 'Sachbearbeiter'])) {
             return true;
         }
 
-        if ($doc instanceof Unit && $doc->property && $doc->property->owner && $doc->property->owner->user_id === $user->id) {
+        return $this->userOwnsDocument($user, $document);
+    }
+
+    /**
+     * Shared ownership resolution for view/download checks.
+     */
+    private function userOwnsDocument(User $user, Document $document): bool
+    {
+        // Use User::resolvedRenter/Owner() – single authoritative 3-step fallback.
+        $renter = $user->resolvedRenter();
+        $owner = $user->resolvedOwner();
+
+        $isRenterDoc = in_array($document->documentable_type, [Renter::class, Tenant::class]);
+
+        // Document belongs directly to this renter
+        if ($renter && $isRenterDoc && (int) $document->documentable_id === (int) $renter->id) {
             return true;
         }
 
-        if ($doc instanceof Tenant && $doc->user_id === $user->id) {
+        // Document belongs to a unit currently rented by this renter
+        if ($renter && $document->documentable_type === Unit::class) {
+            $unitIds = $renter->units()->pluck('id')->toArray();
+            if (in_array($document->documentable_id, $unitIds)) {
+                return true;
+            }
+        }
+
+        // Document belongs to a property of a unit rented by this renter
+        if ($renter && $document->documentable_type === Property::class) {
+            $propertyIds = $renter->units()->pluck('property_id')->filter()->unique()->toArray();
+            if (in_array($document->documentable_id, $propertyIds)) {
+                return true;
+            }
+        }
+
+        // Document belongs directly to this owner
+        if ($owner && $document->documentable_type === Owner::class && (int) $document->documentable_id === (int) $owner->id) {
             return true;
+        }
+
+        // Document belongs to a property owned by this owner
+        if ($owner && $document->documentable_type === Property::class) {
+            $propertyIds = $owner->properties()->pluck('id')->toArray();
+            if (in_array($document->documentable_id, $propertyIds)) {
+                return true;
+            }
         }
 
         return false;

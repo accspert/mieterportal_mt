@@ -15,8 +15,6 @@ class Renter extends Model
     /** @use HasFactory<RenterFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $table = 'renters';
-
     protected $fillable = [
         'user_id',
         'manager_id',

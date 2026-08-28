@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Portal\Concerns\ResolvesUserProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,12 +14,14 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    use ResolvesUserProfile;
+
     public function show(): View
     {
         /** @var User $user */
         $user = Auth::user();
-        $tenant = $user->tenant;
-        $owner = $user->owner;
+        $tenant = $this->resolveRenter($user);
+        $owner = $this->resolveOwner($user);
 
         return view('portal.profile', compact('user', 'tenant', 'owner'));
     }
@@ -27,25 +30,27 @@ class ProfileController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $tenant = $user->tenant;
-        $owner = $user->owner;
+        $tenant = $this->resolveRenter($user);
+        $owner = $this->resolveOwner($user);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'phone' => ['nullable', 'string', 'max:50'],
         ]);
 
+        $fullName = trim($validated['first_name'].' '.$validated['last_name']);
+
         $user->update([
-            'name' => $validated['name'],
+            'name' => $fullName,
             'email' => $validated['email'],
         ]);
 
         if ($tenant) {
-            $nameParts = explode(' ', $validated['name'], 2);
             $tenant->update([
-                'first_name' => $nameParts[0],
-                'last_name' => $nameParts[1] ?? $tenant->last_name,
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
                 'phone' => $validated['phone'],
             ]);

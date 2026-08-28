@@ -202,9 +202,9 @@
                         $isOutgoing = $msg->from_user_id === auth()->id();
                         $otherUser = $isOutgoing ? $msg->recipient : $msg->sender;
                     @endphp
-                    <a href="{{ route('portal.messages.index') }}" style="display: block; text-decoration: none; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); transition: all 0.2s ease;">
+                    <a href="{{ route('portal.messages.index') }}" class="sub-card" style="display: block; text-decoration: none; padding: 12px; transition: all 0.15s ease;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                            <span style="font-weight: 600; color: #fff; font-size: 13px;">
+                            <span style="font-weight: 700; color: var(--text-main); font-size: 13px;">
                                 {{ $isOutgoing ? 'An: ' . ($otherUser->name ?? 'Unbekannt') : 'Von: ' . ($otherUser->name ?? 'Unbekannt') }}
                             </span>
                             <span style="font-size: 11px; color: var(--text-faint);">{{ $msg->created_at->diffForHumans() }}</span>

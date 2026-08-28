@@ -22,7 +22,7 @@ class LatestTicketsWidget extends BaseWidget
     {
         return $table
             ->query(
-                Ticket::query()->latest()->limit(5)
+                Ticket::query()->with('property')->latest()->limit(5)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),

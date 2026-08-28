@@ -21,8 +21,8 @@ class UnitResource extends JsonResource
                     'name' => $this->property->name,
                 ];
             }),
-            'current_tenant' => $this->whenLoaded('currentTenant', function () {
-                return $this->currentTenant ? ['id' => $this->currentTenant->id, 'first_name' => $this->currentTenant->first_name, 'last_name' => $this->currentTenant->last_name] : null;
+            'current_renter' => $this->whenLoaded('currentRenter', function () {
+                return $this->currentRenter ? ['id' => $this->currentRenter->id, 'first_name' => $this->currentRenter->first_name, 'last_name' => $this->currentRenter->last_name] : null;
             }),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

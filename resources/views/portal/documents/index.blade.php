@@ -45,15 +45,23 @@
             </thead>
             <tbody>
                 @forelse($documents as $doc)
+                    @php
+                        $badge = $doc->file_type_badge;
+                    @endphp
                     <tr>
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.15); color: #f87171; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px;">
-                                    PDF
+                                <div style="width: 38px; height: 38px; min-width: 38px; border-radius: var(--radius-sm); background: {{ $badge['bg'] }}; color: {{ $badge['color'] }}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; letter-spacing: 0.05em;">
+                                    {{ $badge['label'] }}
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; color: var(--text-main); font-size: 14px;">{{ $doc->filename }}</div>
-                                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ $doc->mime_type ?? 'application/pdf' }}</div>
+                                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
+                                        {{ $doc->type_label }}
+                                        @if($doc->size)
+                                            &bull; {{ number_format($doc->size / 1024, 1) }} KB
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </td>

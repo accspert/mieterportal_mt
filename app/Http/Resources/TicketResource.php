@@ -21,8 +21,8 @@ class TicketResource extends JsonResource
             'unit' => $this->whenLoaded('unit', function () {
                 return ['id' => $this->unit->id, 'number' => $this->unit->number];
             }),
-            'tenant' => $this->whenLoaded('tenant', function () {
-                return $this->tenant ? ['id' => $this->tenant->id, 'first_name' => $this->tenant->first_name] : null;
+            'renter' => $this->whenLoaded('renter', function () {
+                return $this->renter ? ['id' => $this->renter->id, 'first_name' => $this->renter->first_name] : null;
             }),
             'created_by' => $this->created_by,
             'assigned_to' => $this->assigned_to,

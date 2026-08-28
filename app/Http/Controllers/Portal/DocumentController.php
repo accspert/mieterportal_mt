@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Portal\Concerns\ResolvesUserProfile;
 use App\Models\Document;
 use App\Models\Owner;
 use App\Models\Property;
 use App\Models\Renter;
+use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -18,12 +20,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DocumentController extends Controller
 {
+    use ResolvesUserProfile;
+
     public function index(Request $request): View
     {
         /** @var User $user */
         $user = Auth::user();
-        $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
-        $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
+        $renter = $this->resolveRenter($user);
+        $owner = $this->resolveOwner($user);
 
         $query = Document::query();
 
@@ -32,7 +36,7 @@ class DocumentController extends Controller
             $propertyIds = $renter->units()->pluck('property_id')->filter()->unique()->toArray();
 
             $query->where(function ($q) use ($renter, $unitIds, $propertyIds) {
-                $q->where(fn ($sub) => $sub->where('documentable_type', Renter::class)->where('documentable_id', $renter->id))
+                $q->where(fn ($sub) => $sub->whereIn('documentable_type', [Renter::class, Tenant::class, 'App\\Models\\Tenant'])->where('documentable_id', $renter->id))
                     ->orWhere(fn ($sub) => $sub->where('documentable_type', Unit::class)->whereIn('documentable_id', $unitIds))
                     ->orWhere(fn ($sub) => $sub->where('documentable_type', Property::class)->whereIn('documentable_id', $propertyIds));
             });
@@ -66,59 +70,43 @@ class DocumentController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
-        $tenant = $renter;
-        $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
 
-        // Authorization check
-        $authorized = false;
-        if ($user->hasAnyRole(['Administrator', 'Sachbearbeiter'])) {
-            $authorized = true;
-        } elseif ($renter) {
-            $unitIds = $renter->units()->pluck('id')->toArray();
-            $propertyIds = $renter->units()->pluck('property_id')->filter()->unique()->toArray();
+        // Delegate authorization to DocumentPolicy::download()
+        $this->authorize('download', $document);
 
-            if ($document->documentable_type === Renter::class && (int) $document->documentable_id === (int) $renter->id) {
-                $authorized = true;
-            } elseif ($document->documentable_type === Unit::class && in_array($document->documentable_id, $unitIds)) {
-                $authorized = true;
-            } elseif ($document->documentable_type === Property::class && in_array($document->documentable_id, $propertyIds)) {
-                $authorized = true;
-            }
-        } elseif ($owner) {
-            $propertyIds = $owner->properties()->pluck('id')->toArray();
-            if ($document->documentable_type === Owner::class && (int) $document->documentable_id === (int) $owner->id) {
-                $authorized = true;
-            } elseif ($document->documentable_type === Property::class && in_array($document->documentable_id, $propertyIds)) {
-                $authorized = true;
-            }
-        }
+        $owner = $this->resolveOwner($user);
+        $renter = $this->resolveRenter($user);
+        $disk = Storage::disk('public');
 
-        if (! $authorized) {
-            abort(403, 'Zugriff auf dieses Dokument verweigert.');
-        }
+        // 1. If physical file exists in storage, stream/download it directly with its correct filename and MIME type
+        if ($document->path && $disk->exists($document->path)) {
+            $downloadFilename = $document->download_filename;
+            $mimeType = $document->mime_type ?: $disk->mimeType($document->path) ?: 'application/octet-stream';
 
-        // 1. If physical file exists in storage, stream/download it directly
-        if ($document->path && Storage::disk('public')->exists($document->path)) {
-            return Storage::disk('public')->download($document->path, $document->filename, [
-                'Content-Type' => $document->mime_type ?? 'application/pdf',
+            return $disk->download($document->path, $downloadFilename, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'attachment; filename="'.addslashes($downloadFilename).'"',
             ]);
         }
 
         // 2. Check attachments linked to document
         foreach ($document->attachments as $attachment) {
-            if ($attachment->path && Storage::disk('public')->exists($attachment->path)) {
-                return Storage::disk('public')->download($attachment->path, $attachment->filename ?: $document->filename, [
-                    'Content-Type' => $attachment->mime_type ?? 'application/pdf',
+            if ($attachment->path && $disk->exists($attachment->path)) {
+                $attName = $attachment->download_filename;
+                $attMime = $attachment->mime_type ?: $disk->mimeType($attachment->path) ?: 'application/octet-stream';
+
+                return $disk->download($attachment->path, $attName, [
+                    'Content-Type' => $attMime,
+                    'Content-Disposition' => 'attachment; filename="'.addslashes($attName).'"',
                 ]);
             }
         }
 
-        // 3. Fallback: Generate branded PDF on the fly
+        // 3. Fallback: Generate branded PDF on the fly (for contracts or virtual docs)
         $document->loadMissing('documentable');
         $pdf = Pdf::loadView('pdf.document', [
             'document' => $document,
-            'tenant' => $tenant,
+            'tenant' => $renter,
             'owner' => $owner,
         ])->setPaper('a4', 'portrait');
 

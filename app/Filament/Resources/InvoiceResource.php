@@ -71,13 +71,6 @@ class InvoiceResource extends Resource
         return [
             'invoice_number',
             'notes',
-            'renter.first_name',
-            'renter.last_name',
-            'renter.email',
-            'owner.first_name',
-            'owner.last_name',
-            'owner.company_name',
-            'owner.email',
         ];
     }
 
@@ -272,9 +265,9 @@ class InvoiceResource extends Resource
                         'overdue' => 'Überfällig',
                         'cancelled' => 'Storniert',
                     ]),
-                Tables\Filters\SelectFilter::make('tenant_id')
+                Tables\Filters\SelectFilter::make('renter_id')
                     ->label('Mieter')
-                    ->relationship('tenant', 'last_name')
+                    ->relationship('renter', 'last_name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->last_name}, {$record->first_name}".($record->email ? " ({$record->email})" : ''))
                     ->searchable()
                     ->preload(),
@@ -290,17 +283,17 @@ class InvoiceResource extends Resource
                     ->getOptionLabelFromRecordUsing(fn ($record) => "Einheit {$record->number}".($record->property ? " – {$record->property->name}" : ''))
                     ->searchable()
                     ->preload(),
-                Tables\Filters\TrashedFilter::make(),
+                TrashedFilter::make(),
             ])
             ->headerActions([
                 Action::make('exportCsv')
                     ->label('CSV Export')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(function (CsvExportService $exportService) {
-                        $invoices = Invoice::with(['tenant', 'owner', 'unit'])->latest('due_date')->get();
+                        $invoices = Invoice::with(['renter', 'owner', 'unit'])->latest('due_date')->get();
                         $headers = ['Rechnungsnummer', 'Empfaenger', 'Einheit', 'Betrag', 'Faelligkeitsdatum', 'Status'];
                         $rows = $invoices->map(function ($inv) {
-                            $recipient = $inv->tenant ? "{$inv->tenant->first_name} {$inv->tenant->last_name}" : ($inv->owner ? ($inv->owner->company_name ?: "{$inv->owner->first_name} {$inv->owner->last_name}") : '-');
+                            $recipient = $inv->renter ? "{$inv->renter->first_name} {$inv->renter->last_name}" : ($inv->owner ? ($inv->owner->company_name ?: "{$inv->owner->first_name} {$inv->owner->last_name}") : '-');
 
                             return [
                                 $inv->invoice_number,
@@ -346,7 +339,7 @@ class InvoiceResource extends Resource
                     ->action(function (Collection $records, CsvExportService $exportService) {
                         $headers = ['Rechnungsnummer', 'Empfaenger', 'Einheit', 'Betrag', 'Faelligkeitsdatum', 'Status'];
                         $rows = $records->map(function ($inv) {
-                            $recipient = $inv->tenant ? "{$inv->tenant->first_name} {$inv->tenant->last_name}" : ($inv->owner ? ($inv->owner->company_name ?: "{$inv->owner->first_name} {$inv->owner->last_name}") : '-');
+                            $recipient = $inv->renter ? "{$inv->renter->first_name} {$inv->renter->last_name}" : ($inv->owner ? ($inv->owner->company_name ?: "{$inv->owner->first_name} {$inv->owner->last_name}") : '-');
 
                             return [
                                 $inv->invoice_number,

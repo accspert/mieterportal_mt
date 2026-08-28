@@ -6,6 +6,7 @@ use App\Models\Announcement;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Message;
+use App\Models\Owner;
 use App\Models\Property;
 use App\Models\Renter;
 use App\Models\Task;
@@ -16,11 +17,13 @@ use App\Policies\AnnouncementPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\MessagePolicy;
+use App\Policies\OwnerPolicy;
 use App\Policies\PropertyPolicy;
 use App\Policies\RenterPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\TicketPolicy;
 use App\Policies\UnitPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -32,6 +35,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
+        Owner::class => OwnerPolicy::class,
         Property::class => PropertyPolicy::class,
         Unit::class => UnitPolicy::class,
         Renter::class => RenterPolicy::class,
@@ -41,6 +45,7 @@ class AuthServiceProvider extends ServiceProvider
         Task::class => TaskPolicy::class,
         Invoice::class => InvoicePolicy::class,
         Announcement::class => AnnouncementPolicy::class,
+        User::class => UserPolicy::class,
     ];
 
     /**

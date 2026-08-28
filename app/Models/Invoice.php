@@ -17,6 +17,7 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number',
         'renter_id',
+        'tenant_id',
         'owner_id',
         'unit_id',
         'amount',
@@ -25,6 +26,16 @@ class Invoice extends Model
         'pdf_path',
         'notes',
     ];
+
+    public function setTenantIdAttribute($value): void
+    {
+        $this->attributes['renter_id'] = $value;
+    }
+
+    public function getTenantIdAttribute(): ?int
+    {
+        return $this->attributes['renter_id'] ?? null;
+    }
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -48,12 +59,7 @@ class Invoice extends Model
 
     public function renter(): BelongsTo
     {
-        return $this->belongsTo(Renter::class, 'renter_id');
-    }
-
-    public function tenant(): BelongsTo
-    {
-        return $this->renter();
+        return $this->belongsTo(Renter::class);
     }
 
     public function owner(): BelongsTo

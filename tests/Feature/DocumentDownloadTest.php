@@ -2,23 +2,41 @@
 
 namespace Tests\Feature;
 
+use App\Models\CompanyTenant;
 use App\Models\Document;
 use App\Models\Property;
+use App\Models\Renter;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
 use Database\Seeders\InitialSetupSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class DocumentDownloadTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected CompanyTenant $companyTenant;
+
+    protected string $tenantDomain;
+
     protected function setUp(): void
     {
         parent::setUp();
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
         $this->seed(InitialSetupSeeder::class);
+
+        $id = 'testfirma'.rand(1000, 9999);
+        $this->tenantDomain = $id.'.localhost';
+        $this->companyTenant = CompanyTenant::create([
+            'id' => $id,
+            'company_name' => 'Testverwaltung',
+            'email' => "info@{$id}.local",
+        ]);
+        $this->companyTenant->domains()->create(['domain' => $this->tenantDomain]);
+        $this->companyTenant->domains()->create(['domain' => $id]);
     }
 
     public function test_tenant_can_download_their_document(): void
@@ -28,7 +46,7 @@ class DocumentDownloadTest extends TestCase
         $tenantUser = User::factory()->create();
         $tenantUser->assignRole('Mieter');
         $tenant = Tenant::factory()->create(['user_id' => $tenantUser->id]);
-        $unit = Unit::factory()->create(['property_id' => $property->id, 'current_tenant_id' => $tenant->id]);
+        $unit = Unit::factory()->create(['property_id' => $property->id, 'current_renter_id' => $tenant->id]);
 
         $doc = Document::factory()->create([
             'documentable_type' => Tenant::class,
@@ -37,7 +55,7 @@ class DocumentDownloadTest extends TestCase
             'category' => 'contract',
         ]);
 
-        $response = $this->actingAs($tenantUser)->get(route('portal.documents.download', $doc));
+        $response = $this->actingAs($tenantUser)->get("http://{$this->tenantDomain}/portal/documents/{$doc->id}/download");
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/pdf');
@@ -59,7 +77,37 @@ class DocumentDownloadTest extends TestCase
             'filename' => 'Geheimer_Mietvertrag.pdf',
         ]);
 
-        $response = $this->actingAs($tenantUser2)->get(route('portal.documents.download', $doc1));
+        $response = $this->actingAs($tenantUser2)->get("http://{$this->tenantDomain}/portal/documents/{$doc1->id}/download");
         $response->assertStatus(403);
+    }
+
+    public function test_tenant_can_download_jpeg_image_with_correct_extension_and_mime(): void
+    {
+        Storage::fake('public');
+        $filePath = 'documents/schadensfoto.jpg';
+        Storage::disk('public')->put($filePath, 'fake-jpeg-binary-content');
+
+        $tenantUser = User::factory()->create();
+        $tenantUser->assignRole('Mieter');
+        $renter = Renter::factory()->create(['user_id' => $tenantUser->id]);
+
+        $doc = Document::factory()->create([
+            'documentable_type' => Renter::class,
+            'documentable_id' => $renter->id,
+            'filename' => 'Schadensfoto_Wohnzimmer',
+            'path' => $filePath,
+            'mime_type' => 'image/jpeg',
+            'category' => 'general',
+        ]);
+
+        $this->assertTrue($doc->is_image);
+        $this->assertEquals('jpg', $doc->file_extension);
+        $this->assertEquals('JPG', $doc->file_type_badge['label']);
+        $this->assertEquals('Schadensfoto_Wohnzimmer.jpg', $doc->download_filename);
+
+        $response = $this->actingAs($tenantUser)->get("http://{$this->tenantDomain}/portal/documents/{$doc->id}/download");
+
+        $response->assertStatus(200);
+        $response->assertDownload('Schadensfoto_Wohnzimmer.jpg');
     }
 }

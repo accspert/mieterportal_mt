@@ -9,9 +9,9 @@ class InvoiceObserver
 {
     public function created(Invoice $invoice): void
     {
-        // Notify tenant
-        if ($invoice->tenant && $invoice->tenant->user) {
-            $invoice->tenant->user->notify(new InvoiceDueNotification($invoice));
+        // Notify renter
+        if ($invoice->renter && $invoice->renter->user) {
+            $invoice->renter->user->notify(new InvoiceDueNotification($invoice));
         }
 
         // Notify owner

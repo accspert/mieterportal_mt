@@ -172,8 +172,11 @@
                             <span class="badge" style="background: {{ $invoice->status === 'paid' ? 'rgba(22, 163, 74, 0.15)' : 'rgba(217, 119, 6, 0.15)' }}; color: {{ $invoice->status === 'paid' ? '#15803d' : '#b45309' }}; font-weight: 700;">
                                 {{ $invoice->status === 'paid' ? 'Abgerechnet' : 'In Prüfung' }}
                             </span>
-                            <a href="{{ route('portal.invoices.download', $invoice) }}" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;">
-                                PDF Beleg
+                            <a href="{{ route('portal.invoices.download', $invoice) }}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px; color: #dc2626;">
+                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                 </svg>
+                                 <span>PDF Beleg</span>
                             </a>
                         </div>
                     </div>
@@ -202,22 +205,26 @@
         @else
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 @foreach($recentDocuments as $doc)
+                    @php
+                        $badge = $doc->file_type_badge;
+                    @endphp
                     <div class="sub-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #059669; display: flex; align-items: center; justify-content: center; font-weight: 700;">
-                                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                </svg>
+                            <div style="width: 34px; height: 34px; min-width: 34px; border-radius: 6px; background: {{ $badge['bg'] }}; color: {{ $badge['color'] }}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px;">
+                                {{ $badge['label'] }}
                             </div>
                             <div>
                                 <div style="font-weight: 700; font-size: 13px; color: var(--text-main);">{{ $doc->filename }}</div>
                                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
-                                    {{ ucfirst($doc->category ?? 'Objektunterlage') }} &bull; {{ $doc->created_at->format('d.m.Y') }}
+                                    {{ ucfirst($doc->category ?? 'Objektunterlage') }} &bull; {{ $doc->type_label }} &bull; {{ $doc->created_at->format('d.m.Y') }}
                                 </div>
                             </div>
                         </div>
-                        <a href="{{ route('portal.documents.download', $doc) }}" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;">
-                            Download
+                        <a href="{{ route('portal.documents.download', $doc) }}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px; color: #0056B3;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            <span>Download</span>
                         </a>
                     </div>
                 @endforeach

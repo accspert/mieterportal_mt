@@ -5,22 +5,22 @@
 
 @section('content')
 <div style="max-width: 800px; margin: 0 auto;">
-    <div style="margin-bottom: 24px;">
-        <h1 style="font-size: 24px; margin-bottom: 6px;">Kontoeinstellungen & Sicherheit</h1>
-        <p style="color: var(--text-muted); font-size: 14px;">Verwalten Sie Ihre persönlichen Kontaktdaten und Anmeldeinformationen.</p>
+    <div class="mb-5">
+        <h1 class="text-3xl mb-2">Kontoeinstellungen &amp; Sicherheit</h1>
+        <p class="section-subtitle">Verwalten Sie Ihre persönlichen Kontaktdaten und Anmeldeinformationen.</p>
     </div>
 
     <!-- Contact Info Card -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+    <div class="card mb-5">
+        <div class="d-flex flex-center gap-4 mb-4 border-bottom" style="padding-bottom: 14px;">
             <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: rgba(37, 99, 235, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center;">
-                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon-md">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
             </div>
             <div>
-                <h3 style="font-size: 18px;">Persönliche Kontaktdaten</h3>
-                <div style="font-size: 12px; color: var(--text-muted);">Aktualisieren Sie Ihren Namen, E-Mail-Adresse und Telefonnummer.</div>
+                <h3 class="text-xl">Persönliche Kontaktdaten</h3>
+                <div class="text-sm text-muted">Aktualisieren Sie Ihren Namen, E-Mail-Adresse und Telefonnummer.</div>
             </div>
         </div>
 
@@ -30,8 +30,15 @@
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
                 <div class="form-group">
-                    <label class="form-label" for="name">Vollständiger Name *</label>
-                    <input type="text" id="name" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
+                    <label class="form-label" for="first_name">Vorname *</label>
+                    <input type="text" id="first_name" name="first_name" class="form-control"
+                           value="{{ old('first_name', $tenant?->first_name ?? $owner?->first_name ?? explode(' ', $user->name, 2)[0]) }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="last_name">Nachname *</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control"
+                           value="{{ old('last_name', $tenant?->last_name ?? $owner?->last_name ?? (explode(' ', $user->name, 2)[1] ?? '')) }}" required>
                 </div>
 
                 <div class="form-group">
@@ -45,7 +52,7 @@
                 <input type="text" id="phone" name="phone" class="form-control" placeholder="+49 170 1234567" value="{{ old('phone', $tenant?->phone ?? $owner?->phone) }}">
             </div>
 
-            <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+            <div class="d-flex" style="justify-content: flex-end; margin-top: 16px;">
                 <button type="submit" class="btn btn-primary">
                     <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -58,15 +65,15 @@
 
     <!-- Security & Password Card -->
     <div class="card">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+        <div class="d-flex flex-center gap-4 mb-4 border-bottom" style="padding-bottom: 14px;">
             <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.15); color: #ef4444; display: flex; align-items: center; justify-content: center;">
-                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon-md">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
             </div>
             <div>
-                <h3 style="font-size: 18px;">Passwort & Sicherheit</h3>
-                <div style="font-size: 12px; color: var(--text-muted);">Ändern Sie Ihr Passwort, um Ihr Kundenkonto zu schützen.</div>
+                <h3 class="text-xl">Passwort &amp; Sicherheit</h3>
+                <div class="text-sm text-muted">Ändern Sie Ihr Passwort, um Ihr Kundenkonto zu schützen.</div>
             </div>
         </div>
 
@@ -91,8 +98,8 @@
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
-                <button type="submit" class="btn btn-secondary">
+            <div class="d-flex" style="justify-content: flex-end; margin-top: 16px;">
+                <button type="submit" class="btn btn-outline">
                     <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                     </svg>

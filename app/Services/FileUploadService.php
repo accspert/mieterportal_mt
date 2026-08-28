@@ -24,7 +24,7 @@ class FileUploadService
             'attachable_id' => $attachable->getKey(),
             'filename' => $file->getClientOriginalName(),
             'path' => $path,
-            'mime_type' => $file->getClientMimeType() ?: $file->getMimeType(),
+            'mime_type' => $file->getMimeType() ?: $file->getClientMimeType(),
             'size' => $file->getSize(),
             'uploaded_by' => $uploader?->id ?? auth()->id(),
         ]);
@@ -49,7 +49,7 @@ class FileUploadService
             'documentable_id' => $documentable->getKey(),
             'filename' => $file->getClientOriginalName(),
             'path' => $path,
-            'mime_type' => $file->getClientMimeType() ?: $file->getMimeType(),
+            'mime_type' => $file->getMimeType() ?: $file->getClientMimeType(),
             'size' => $file->getSize(),
             'category' => $category,
             'version' => $version,

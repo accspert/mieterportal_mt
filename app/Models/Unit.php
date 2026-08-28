@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Unit extends Model
@@ -18,34 +21,35 @@ class Unit extends Model
         'rooms',
         'status',
         'current_renter_id',
+        'current_tenant_id',
     ];
 
-    public function property()
+    public function setCurrentTenantIdAttribute($value): void
+    {
+        $this->attributes['current_renter_id'] = $value;
+    }
+
+    public function getCurrentTenantIdAttribute(): ?int
+    {
+        return $this->attributes['current_renter_id'] ?? null;
+    }
+
+    public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class);
     }
 
-    public function currentRenter()
+    public function currentRenter(): BelongsTo
     {
         return $this->belongsTo(Renter::class, 'current_renter_id');
     }
 
-    public function currentTenant()
-    {
-        return $this->currentRenter();
-    }
-
-    public function renter()
-    {
-        return $this->currentRenter();
-    }
-
-    public function documents()
+    public function documents(): MorphMany
     {
         return $this->morphMany(Document::class, 'documentable');
     }
 
-    public function tickets()
+    public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
     }

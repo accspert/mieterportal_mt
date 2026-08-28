@@ -24,7 +24,7 @@ class TicketController extends Controller
 
     public function index(Request $request)
     {
-        $query = Ticket::query()->with(['property', 'unit', 'tenant']);
+        $query = Ticket::query()->with(['property', 'unit', 'renter']);
         if ($q = $request->get('search')) {
             $query->where('title', 'like', "%{$q}%")->orWhere('description', 'like', "%{$q}%");
         }

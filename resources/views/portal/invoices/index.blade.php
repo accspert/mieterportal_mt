@@ -6,13 +6,13 @@
 @section('content')
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
     <div>
-        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; background: rgba(59, 130, 246, 0.12); color: #60a5fa; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
+        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; background: var(--color-primary-50); color: var(--color-primary-600); font-size: 12px; font-weight: 600; margin-bottom: 8px;">
             <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 14px; height: 14px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
             </svg>
             Finanz- & Abrechnungszentrum
         </div>
-        <h1 style="font-size: 24px; margin-bottom: 4px; color: #fff;">Rechnungsübersicht & Zahlungen</h1>
+        <h1 style="font-size: 24px; margin-bottom: 4px; color: var(--text-main);">Rechnungsübersicht & Zahlungen</h1>
         <p style="color: var(--text-muted); font-size: 14px;">Mietzahlungen, Nebenkostenabrechnungen und Einzelbelege auf einen Blick.</p>
     </div>
 </div>
@@ -20,41 +20,41 @@
 <!-- Financial Stats Grid -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px;">
     <!-- Offene Forderungen -->
-    <div class="stat-card stat-warning" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8)); border-left: 4px solid var(--color-warning-500);">
-        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+    <div class="stat-card stat-warning" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-left: 4px solid var(--color-warning-500);">
+        <div class="stat-icon" style="background: var(--color-warning-50); color: var(--color-warning-600);">
             <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 22px; height: 22px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value" style="color: #fbbf24;">{{ number_format($totals['open_amount'], 2, ',', '.') }} €</div>
-            <div class="stat-label">Offen / Ausstehend ({{ $totals['open_count'] }} {{ $totals['open_count'] === 1 ? 'Rechnung' : 'Rechnungen' }})</div>
+            <div class="stat-value" style="color: var(--color-warning-600);">{{ number_format($totals['open_amount'], 2, ',', '.') }} €</div>
+            <div class="stat-label" style="color: var(--text-muted);">Offen / Ausstehend ({{ $totals['open_count'] }} {{ $totals['open_count'] === 1 ? 'Rechnung' : 'Rechnungen' }})</div>
         </div>
     </div>
 
     <!-- Bereits beglichen -->
-    <div class="stat-card stat-success" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8)); border-left: 4px solid var(--color-success-500);">
-        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+    <div class="stat-card stat-success" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-left: 4px solid var(--color-success-500);">
+        <div class="stat-icon" style="background: var(--color-success-50); color: var(--color-success-600);">
             <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 22px; height: 22px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value" style="color: #34d399;">{{ number_format($totals['paid_amount'], 2, ',', '.') }} €</div>
-            <div class="stat-label">Bereits beglichen ({{ $totals['paid_count'] }} {{ $totals['paid_count'] === 1 ? 'Rechnung' : 'Rechnungen' }})</div>
+            <div class="stat-value" style="color: var(--color-success-600);">{{ number_format($totals['paid_amount'], 2, ',', '.') }} €</div>
+            <div class="stat-label" style="color: var(--text-muted);">Bereits beglichen ({{ $totals['paid_count'] }} {{ $totals['paid_count'] === 1 ? 'Rechnung' : 'Rechnungen' }})</div>
         </div>
     </div>
 
     <!-- Gesamtübersicht -->
-    <div class="stat-card stat-accent" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8)); border-left: 4px solid var(--color-primary-500);">
-        <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+    <div class="stat-card stat-accent" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-left: 4px solid var(--color-primary-600);">
+        <div class="stat-icon" style="background: var(--color-primary-50); color: var(--color-primary-600);">
             <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 22px; height: 22px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
         </div>
         <div class="stat-info">
-            <div class="stat-value" style="color: #60a5fa;">{{ $totals['total_count'] }}</div>
-            <div class="stat-label">Gesamte Rechnungsbelege</div>
+            <div class="stat-value" style="color: var(--color-primary-600);">{{ $totals['total_count'] }}</div>
+            <div class="stat-label" style="color: var(--text-muted);">Gesamte Rechnungsbelege</div>
         </div>
     </div>
 </div>
@@ -201,8 +201,8 @@
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
                             <div style="font-size: 36px; margin-bottom: 12px;">💳</div>
-                            <div style="font-weight: 600; font-size: 16px; color: #fff; margin-bottom: 4px;">Keine Rechnungen gefunden</div>
-                            <div style="font-size: 13px; max-width: 400px; margin: 0 auto;">
+                            <div style="font-weight: 600; font-size: 16px; color: var(--text-main); margin-bottom: 4px;">Keine Rechnungen gefunden</div>
+                            <div style="font-size: 13px; max-width: 400px; margin: 0 auto; color: var(--text-muted);">
                                 @if(request()->hasAny(['search', 'status']))
                                     Für Ihre aktuellen Filtereinstellungen wurden keine Rechnungen gefunden.
                                 @else

@@ -16,9 +16,7 @@ class CreateDocument extends CreateRecord
 
         if (! empty($data['path']) && Storage::disk('public')->exists($data['path'])) {
             $data['size'] = Storage::disk('public')->size($data['path']);
-            $data['mime_type'] = Storage::disk('public')->mimeType($data['path']) ?? 'application/pdf';
-        } else {
-            $data['mime_type'] = $data['mime_type'] ?? 'application/pdf';
+            $data['mime_type'] = Storage::disk('public')->mimeType($data['path']) ?: 'application/octet-stream';
         }
 
         return $data;

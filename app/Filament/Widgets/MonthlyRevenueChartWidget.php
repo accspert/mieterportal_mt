@@ -20,23 +20,32 @@ class MonthlyRevenueChartWidget extends ChartWidget
     protected function getData(): array
     {
         $months = collect(range(5, 0))->map(function ($i) {
-            return Carbon::now()->subMonths($i);
+            return Carbon::now()->subMonths($i)->startOfMonth();
         });
 
         $labels = $months->map(fn ($m) => $m->translatedFormat('M Y'))->toArray();
+        $startDate = $months->first()->copy()->startOfMonth();
 
-        $invoicedData = $months->map(function ($month) {
-            return (float) Invoice::whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->sum('amount');
-        })->toArray();
+        // Single query for entire 6 month period
+        $invoices = Invoice::where('created_at', '>=', $startDate)
+            ->select('created_at', 'status', 'amount')
+            ->get();
 
-        $paidData = $months->map(function ($month) {
-            return (float) Invoice::whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->where('status', 'paid')
-                ->sum('amount');
-        })->toArray();
+        $invoicedData = [];
+        $paidData = [];
+
+        foreach ($months as $month) {
+            $year = $month->year;
+            $m = $month->month;
+
+            $monthInvoices = $invoices->filter(function ($inv) use ($year, $m) {
+                $c = Carbon::parse($inv->created_at);
+                return $c->year === $year && $c->month === $m;
+            });
+
+            $invoicedData[] = (float) $monthInvoices->sum('amount');
+            $paidData[] = (float) $monthInvoices->where('status', 'paid')->sum('amount');
+        }
 
         return [
             'datasets' => [

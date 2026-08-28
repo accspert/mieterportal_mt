@@ -76,7 +76,7 @@
                             <li style="display: flex; justify-content: space-between; color: var(--text-main);">
                                 <span>Einheit {{ $unit->number }} ({{ $unit->floor ?? 'EG' }}, {{ $unit->area ?? '-' }} m²)</span>
                                 <span style="color: var(--text-muted);">
-                                    {{ $unit->currentTenant ? $unit->currentTenant->first_name . ' ' . $unit->currentTenant->last_name : 'Leerstand' }}
+                                    {{ $unit->currentRenter ? $unit->currentRenter->first_name . ' ' . $unit->currentRenter->last_name : 'Leerstand' }}
                                 </span>
                             </li>
                         @endforeach

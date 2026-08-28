@@ -153,8 +153,8 @@
         <tr>
             <td class="recipient-box">
                 <span style="font-size: 10px; color: #94a3b8; text-decoration: underline;">Mieterportal GmbH &bull; Musterstraße 42 &bull; 20095 Hamburg</span><br><br>
-                @if($invoice->tenant)
-                    <strong>{{ $invoice->tenant->first_name }} {{ $invoice->tenant->last_name }}</strong><br>
+                @if($invoice->renter)
+                    <strong>{{ $invoice->renter->first_name }} {{ $invoice->renter->last_name }}</strong><br>
                     @if($invoice->unit && $invoice->unit->property)
                         {{ $invoice->unit->property->street }} (Einheit {{ $invoice->unit->number }})<br>
                         {{ $invoice->unit->property->postal_code }} {{ $invoice->unit->property->city }}

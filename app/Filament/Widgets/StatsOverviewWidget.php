@@ -16,15 +16,27 @@ class StatsOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         $totalProperties = Property::count();
-        $totalUnits = Unit::count();
-        $occupiedUnits = Unit::whereNotNull('current_renter_id')->count();
+
+        $unitStats = Unit::selectRaw('COUNT(*) as total, COUNT(current_renter_id) as occupied')->first();
+        $totalUnits = (int) ($unitStats->total ?? 0);
+        $occupiedUnits = (int) ($unitStats->occupied ?? 0);
         $occupancyRate = $totalUnits > 0 ? round(($occupiedUnits / $totalUnits) * 100, 1) : 0;
 
-        $openTickets = Ticket::whereIn('status', ['open', 'in_progress', 'waiting'])->count();
-        $urgentTickets = Ticket::where('priority', 'urgent')->whereNotIn('status', ['resolved', 'closed', 'done'])->count();
+        $ticketStats = Ticket::selectRaw("
+            SUM(CASE WHEN status IN ('open', 'in_progress', 'waiting') THEN 1 ELSE 0 END) as open_count,
+            SUM(CASE WHEN priority = 'urgent' AND status NOT IN ('resolved', 'closed', 'done') THEN 1 ELSE 0 END) as urgent_count
+        ")->first();
 
-        $openInvoicesSum = Invoice::whereIn('status', ['sent', 'overdue'])->sum('amount');
-        $paidInvoicesSum = Invoice::where('status', 'paid')->sum('amount');
+        $openTickets = (int) ($ticketStats->open_count ?? 0);
+        $urgentTickets = (int) ($ticketStats->urgent_count ?? 0);
+
+        $invoiceStats = Invoice::selectRaw("
+            SUM(CASE WHEN status IN ('sent', 'overdue') THEN amount ELSE 0 END) as open_amount,
+            SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as paid_amount
+        ")->first();
+
+        $openInvoicesSum = (float) ($invoiceStats->open_amount ?? 0);
+        $paidInvoicesSum = (float) ($invoiceStats->paid_amount ?? 0);
 
         return [
             Stat::make('Liegenschaften & Einheiten', "{$totalProperties} / {$totalUnits}")

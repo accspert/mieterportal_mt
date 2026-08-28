@@ -106,7 +106,7 @@ class CustomerPortalTest extends TestCase
 
         $this->assertDatabaseHas('tickets', [
             'title' => 'Wasserhahn tropft in Küche',
-            'tenant_id' => $this->tenant->id,
+            'renter_id' => $this->tenant->id,
             'unit_id' => $this->unit->id,
             'created_by' => $this->tenantUser->id,
             'status' => 'open',

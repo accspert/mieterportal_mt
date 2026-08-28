@@ -19,6 +19,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class AdminResourcesTest extends TestCase
@@ -45,7 +46,7 @@ class AdminResourcesTest extends TestCase
         $this->actingAs($this->admin)->get('/admin/owners')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/properties')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/units')->assertStatus(200);
-        $this->actingAs($this->admin)->get('/admin/tenants')->assertStatus(200);
+        $this->actingAs($this->admin)->get('/admin/renters')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/tickets')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/documents')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/messages')->assertStatus(200);
@@ -59,7 +60,7 @@ class AdminResourcesTest extends TestCase
         $this->actingAs($this->admin)->get('/admin/owners/create')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/properties/create')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/units/create')->assertStatus(200);
-        $this->actingAs($this->admin)->get('/admin/tenants/create')->assertStatus(200);
+        $this->actingAs($this->admin)->get('/admin/renters/create')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/tickets/create')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/documents/create')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/messages/create')->assertStatus(200);
@@ -216,7 +217,7 @@ class AdminResourcesTest extends TestCase
         Livewire::test(CreateInvoice::class)
             ->fillForm([
                 'invoice_number' => 'RE-2026-TEST-001',
-                'tenant_id' => $tenant->id,
+                'renter_id' => $tenant->id,
                 'unit_id' => $unit->id,
                 'amount' => '750.50',
                 'due_date' => '2026-09-01',
@@ -227,7 +228,7 @@ class AdminResourcesTest extends TestCase
 
         $this->assertDatabaseHas('invoices', [
             'invoice_number' => 'RE-2026-TEST-001',
-            'tenant_id' => $tenant->id,
+            'renter_id' => $tenant->id,
             'amount' => 750.50,
             'status' => 'sent',
         ]);
@@ -237,11 +238,14 @@ class AdminResourcesTest extends TestCase
     {
         $this->actingAs($this->admin);
 
+        $role = Role::firstOrCreate(['name' => 'Sachbearbeiter']);
+
         Livewire::test(CreateUser::class)
             ->fillForm([
                 'name' => 'New Staff User',
                 'email' => 'newstaff@kundenportal.local',
                 'password' => 'secret123',
+                'roles' => [$role->id],
             ])
             ->call('create')
             ->assertHasNoFormErrors();

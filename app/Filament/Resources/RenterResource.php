@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RenterResource\Pages;
+use App\Filament\Resources\RenterResource\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\RenterResource\RelationManagers\InvoicesRelationManager;
 use App\Models\Renter;
 use App\Models\Unit;
@@ -200,7 +201,7 @@ class RenterResource extends Resource
                         true: fn ($query) => $query->whereNotNull('user_id'),
                         false: fn ($query) => $query->whereNull('user_id'),
                     ),
-                Tables\Filters\TrashedFilter::make(),
+                TrashedFilter::make(),
             ])
             ->headerActions([
                 Action::make('exportCsv')
@@ -325,6 +326,106 @@ class RenterResource extends Resource
                         }
                     }),
 
+                Action::make('uploadDocument')
+                    ->label('Dokument hochladen')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('info')
+                    ->modalHeading(fn (Renter $record): string => "Dokument für {$record->first_name} {$record->last_name} hochladen")
+                    ->schema([
+                        Forms\Components\FileUpload::make('path')
+                            ->label('Dokument')
+                            ->disk('public')
+                            ->directory('documents')
+                            ->preserveFilenames()
+                            ->required(),
+                        Forms\Components\TextInput::make('filename')
+                            ->label('Titel')
+                            ->required(),
+                        Forms\Components\Select::make('category')
+                            ->label('Kategorie')
+                            ->options([
+                                'contract' => 'Mietvertrag / Vertrag',
+                                'invoice' => 'Abrechnung / Rechnung',
+                                'utility_bill' => 'Nebenkostenabrechnung',
+                                'protocol' => 'Übergabeprotokoll',
+                                'general' => 'Allgemeine Unterlage',
+                            ])
+                            ->default('contract')
+                            ->required(),
+                    ])
+                    ->action(function (Renter $record, array $data): void {
+                        $record->documents()->create([
+                            'filename' => $data['filename'],
+                            'category' => $data['category'],
+                            'path' => $data['path'],
+                            'uploaded_by' => auth()->id(),
+                            'size' => 0,
+                            'mime_type' => 'application/pdf',
+                        ]);
+
+                        Notification::make()
+                            ->title('Dokument erfolgreich hochgeladen')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('createInvoice')
+                    ->label('Rechnung erstellen')
+                    ->icon('heroicon-o-document-plus')
+                    ->color('warning')
+                    ->modalHeading(fn (Renter $record): string => "Rechnung für {$record->first_name} {$record->last_name} erstellen")
+                    ->schema([
+                        Forms\Components\TextInput::make('invoice_number')
+                            ->label('Rechnungsnummer')
+                            ->required(),
+                        Forms\Components\Select::make('unit_id')
+                            ->label('Mieteinheit')
+                            ->options(fn (Renter $record) => $record->units()->pluck('number', 'id'))
+                            ->nullable(),
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Betrag')
+                            ->numeric()
+                            ->required(),
+                        Forms\Components\DatePicker::make('due_date')
+                            ->label('Fälligkeitsdatum')
+                            ->required(),
+                        Forms\Components\Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'draft' => 'Entwurf',
+                                'sent' => 'Ausstehend',
+                                'paid' => 'Bezahlt',
+                                'overdue' => 'Überfällig',
+                                'cancelled' => 'Storniert',
+                            ])
+                            ->default('sent')
+                            ->required(),
+                        Forms\Components\FileUpload::make('pdf_path')
+                            ->label('Rechnungs-PDF (optional)')
+                            ->disk('public')
+                            ->directory('invoices')
+                            ->nullable(),
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Notizen')
+                            ->nullable(),
+                    ])
+                    ->action(function (Renter $record, array $data): void {
+                        $record->invoices()->create([
+                            'invoice_number' => $data['invoice_number'],
+                            'unit_id' => $data['unit_id'] ?? null,
+                            'amount' => $data['amount'],
+                            'due_date' => $data['due_date'],
+                            'status' => $data['status'],
+                            'pdf_path' => $data['pdf_path'] ?? null,
+                            'notes' => $data['notes'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Rechnung erfolgreich erstellt')
+                            ->success()
+                            ->send();
+                    }),
+
                 EditAction::make(),
                 DeleteAction::make(),
                 RestoreAction::make(),
@@ -415,6 +516,7 @@ class RenterResource extends Resource
     public static function getRelations(): array
     {
         return [
+            DocumentsRelationManager::class,
             InvoicesRelationManager::class,
         ];
     }
