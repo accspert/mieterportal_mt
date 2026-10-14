@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Attachment;
+use App\Models\CompanyTenant;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Message;
@@ -15,15 +16,46 @@ use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use RuntimeException;
 
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
+    /**
+     * Demo accounts all share the password "password", so they must never exist on a real customer installation.
+     */
+    public static function isAllowed(): bool
+    {
+        return ! app()->isProduction() || config('app.demo_mode');
+    }
+
     public function run(): void
     {
+        if (! static::isAllowed()) {
+            throw new RuntimeException('Demo-Daten dürfen in der Produktion nur bei APP_DEMO_MODE=true angelegt werden.');
+        }
+
+        // Roles and permissions are shared by all property managements.
         $this->call(InitialSetupSeeder::class);
 
+        if (tenancy()->initialized) {
+            $this->seedDemoData();
+
+            return;
+        }
+
+        // Without an active property management (php artisan db:seed) the demo one is used.
+        CompanyTenant::query()
+            ->firstOrCreate(['id' => 'demo'], ['company_name' => 'Demo Hausverwaltung AG', 'plan' => 'standard', 'is_active' => true])
+            ->run(fn () => $this->seedDemoData());
+    }
+
+    /**
+     * Demo records of the active property management. All demo accounts use the password "password".
+     */
+    protected function seedDemoData(): void
+    {
         $admin = User::firstOrCreate(
             ['email' => 'admin@kundenportal.local'],
             [

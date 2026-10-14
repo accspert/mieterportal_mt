@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\InvoiceResource;
 use App\Filament\Resources\PropertyResource;
-use App\Filament\Resources\TenantResource;
+use App\Filament\Resources\RenterResource;
 use App\Filament\Resources\TicketResource;
 use App\Models\Invoice;
 use App\Models\Property;
@@ -66,7 +66,8 @@ class ProfileAndGlobalSearchTest extends TestCase
     public function test_tenant_can_update_contact_details(): void
     {
         $response = $this->actingAs($this->tenantUser)->put('/portal/profile/contact', [
-            'name' => 'Felix Neuhaus',
+            'first_name' => 'Felix',
+            'last_name' => 'Neuhaus',
             'email' => 'felix.neu@kundenportal.local',
             'phone' => '+49 172 9998877',
         ]);
@@ -112,7 +113,7 @@ class ProfileAndGlobalSearchTest extends TestCase
         $ticket = Ticket::factory()->create(['title' => 'Dachschaden Unwetter']);
         $invoice = Invoice::factory()->create(['invoice_number' => 'RE-GLOBAL-999']);
 
-        $this->assertEquals(['first_name', 'last_name', 'email', 'phone'], TenantResource::getGloballySearchableAttributes());
+        $this->assertEquals(['first_name', 'last_name', 'email', 'phone'], RenterResource::getGloballySearchableAttributes());
         $this->assertEquals(['name', 'street', 'city', 'postal_code'], PropertyResource::getGloballySearchableAttributes());
         $this->assertEquals(['title', 'description'], TicketResource::getGloballySearchableAttributes());
         $this->assertEquals(['invoice_number', 'notes'], InvoiceResource::getGloballySearchableAttributes());

@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Ticket;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\DB;
 
 class TicketStatusChartWidget extends ChartWidget
 {
@@ -18,7 +19,7 @@ class TicketStatusChartWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $counts = Ticket::select('status', \Illuminate\Support\Facades\DB::raw('count(*) as aggregate'))
+        $counts = Ticket::select('status', DB::raw('count(*) as aggregate'))
             ->groupBy('status')
             ->pluck('aggregate', 'status');
 

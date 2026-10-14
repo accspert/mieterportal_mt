@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Portal\Concerns\ResolvesUserProfile;
 use App\Models\Owner;
+use App\Models\Renter;
 use App\Models\Ticket;
+use App\Models\Unit;
 use App\Models\User;
+use App\Rules\TenantScoped;
 use App\Services\FileUploadService;
 use App\Services\TicketService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class TicketController extends Controller
@@ -86,14 +90,16 @@ class TicketController extends Controller
         /** @var User $user */
         $user = Auth::user();
         $renter = $this->resolveRenter($user);
+        $isStaff = $user->hasAnyRole(['Administrator', 'Sachbearbeiter']);
+        ['units' => $allowedUnitIds, 'properties' => $allowedPropertyIds] = $this->ticketableIds($renter, $this->resolveOwner($user));
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:5000'],
             'category' => ['required', 'string', 'in:general,repair,billing,other'],
             'priority' => ['required', 'string', 'in:low,medium,high,urgent'],
-            'unit_id' => ['nullable', 'exists:units,id'],
-            'property_id' => ['nullable', 'exists:properties,id'],
+            'unit_id' => ['nullable', 'integer', TenantScoped::exists('units'), ...($isStaff ? [] : [Rule::in($allowedUnitIds)])],
+            'property_id' => ['nullable', 'integer', TenantScoped::exists('properties'), ...($isStaff ? [] : [Rule::in($allowedPropertyIds)])],
             'attachments' => ['nullable', 'array'],
             'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx'],
         ]);
@@ -108,6 +114,27 @@ class TicketController extends Controller
 
         return redirect()->route('portal.tickets.show', $ticket)
             ->with('success', 'Ihre Schadensmeldung wurde erfolgreich übermittelt und dem zuständigen Sachbearbeiter zugewiesen.');
+    }
+
+    /**
+     * Units and properties the user may report tickets for: the renter's rented units
+     * and the owner's properties (including their units).
+     *
+     * @return array{units: list<int>, properties: list<int>}
+     */
+    private function ticketableIds(?Renter $renter, ?Owner $owner): array
+    {
+        $rentedUnits = $renter?->units()->get(['id', 'property_id']) ?? collect();
+        $ownedPropertyIds = $owner?->properties()->pluck('id') ?? collect();
+
+        return [
+            'units' => $rentedUnits->pluck('id')
+                ->merge(Unit::whereIn('property_id', $ownedPropertyIds)->pluck('id'))
+                ->unique()->values()->all(),
+            'properties' => $rentedUnits->pluck('property_id')
+                ->merge($ownedPropertyIds)
+                ->filter()->unique()->values()->all(),
+        ];
     }
 
     public function show(Ticket $ticket): View

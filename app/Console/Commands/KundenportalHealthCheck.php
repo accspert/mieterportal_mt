@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\CompanyTenant;
 use App\Models\Invoice;
 use App\Models\Property;
 use App\Models\Ticket;
@@ -9,11 +10,10 @@ use App\Models\Unit;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Permission\Models\Role;
 
 class KundenportalHealthCheck extends Command
 {
-    protected $signature = 'mieterportal:health {--tenant= : Check a specific SaaS tenant database}';
+    protected $signature = 'mieterportal:health {--tenant= : Check a specific property management}';
 
     protected $aliases = ['kundenportal:health'];
 
@@ -33,7 +33,7 @@ class KundenportalHealthCheck extends Command
         try {
             DB::connection()->getPdo();
             $dbName = DB::connection()->getDatabaseName();
-            $tenantCount = \App\Models\CompanyTenant::count();
+            $tenantCount = CompanyTenant::count();
             $this->line("   [OK] Zentrale Datenbank erreichbar ({$dbName}) — {$tenantCount} SaaS-Mandanten registriert");
         } catch (\Throwable $e) {
             $this->error("   [FEHLER] Zentrale Datenbank nicht erreichbar: {$e->getMessage()}");
@@ -53,11 +53,11 @@ class KundenportalHealthCheck extends Command
             $allOk = false;
         }
 
-        // 3. Check Tenant Databases
+        // 3. Key figures per property management (all share one database)
         $this->newLine();
-        $this->comment('3. Mandanten-Datenbanken & Kennzahlen:');
+        $this->comment('3. Mandanten & Kennzahlen:');
 
-        $tenantQuery = \App\Models\CompanyTenant::query();
+        $tenantQuery = CompanyTenant::query();
         if ($tenantId = $this->option('tenant')) {
             $tenantQuery->where('id', $tenantId);
         }

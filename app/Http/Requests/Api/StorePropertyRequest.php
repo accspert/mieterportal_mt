@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Models\Property;
+use App\Rules\TenantScoped;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePropertyRequest extends FormRequest
@@ -15,7 +16,7 @@ class StorePropertyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'owner_id' => 'nullable|exists:owners,id',
+            'owner_id' => ['nullable', TenantScoped::exists('owners')],
             'name' => 'required|string|max:255',
             'street' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:20',

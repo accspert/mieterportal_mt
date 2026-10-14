@@ -19,7 +19,12 @@ use App\Filament\Widgets\MonthlyRevenueChartWidget;
 use App\Filament\Widgets\StatsOverviewWidget;
 use App\Filament\Widgets\TicketStatusChartWidget;
 use App\Http\Middleware\EnsureAdminPanelAccess;
+use App\Http\Middleware\EnsureTenantIsActive;
+use App\Http\Middleware\InitializeTenancyFromUser;
 use App\Http\Middleware\SetLocale;
+use App\Services\ImpersonationService;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -35,8 +40,6 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Stancl\Tenancy\Middleware\InitializeTenancyByDomainOrSubdomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -46,9 +49,22 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->brandName('Mieterportal')
+            ->brandName('Liegenschaftsportal.ch')
             ->brandLogo(fn () => view('filament.brand'))
             ->brandLogoHeight('2.5rem')
+            ->favicon(asset('favicon.svg'))
+            ->passwordReset()
+            ->multiFactorAuthentication(
+                [
+                    AppAuthentication::make()
+                        ->brandName('Liegenschaftsportal.ch')
+                        ->recoverable(),
+                    EmailAuthentication::make(),
+                ],
+                // A super admin working in the account of an administrator (support) is not asked to set up
+                // that person's second factor.
+                isRequired: fn (): bool => (bool) config('app.admin_mfa_required') && ! ImpersonationService::isImpersonating(),
+            )
             ->colors([
                 'primary' => '#0056B3',
                 'danger' => '#dc2626',
@@ -57,15 +73,20 @@ class AdminPanelProvider extends PanelProvider
                 'warning' => '#d97706',
             ])
             ->renderHook(
-                PanelsRenderHook::HEAD_START,
-                fn () => new HtmlString(
-                    '<link rel="preconnect" href="https://fonts.googleapis.com">'.
-                    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-                )
-            )
-            ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn () => new HtmlString('<link rel="stylesheet" href="'.asset('css/admin.css').'">')
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_START,
+                fn () => view('partials.impersonation-banner')
+            )
+            ->renderHook(
+                PanelsRenderHook::FOOTER,
+                fn () => view('legal.partials.footer-links')
+            )
+            ->renderHook(
+                PanelsRenderHook::SIMPLE_PAGE_END,
+                fn () => view('legal.partials.footer-links')
             )
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
@@ -115,11 +136,16 @@ class AdminPanelProvider extends PanelProvider
                 ActivityResource::class,
             ])
             ->middleware([
-                InitializeTenancyByDomainOrSubdomain::class,
-                PreventAccessFromCentralDomains::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
+                // Must run before Filament's Authenticate (which Laravel's middleware priority moves up front,
+                // right before InitializeTenancyFromUser): renters are redirected to the portal instead of
+                // hitting the 403 from canAccessPanel(). Roles are shared, so no tenant is needed here.
+                EnsureAdminPanelAccess::class,
+                // The logged-in user determines the property management (one shared database).
+                InitializeTenancyFromUser::class,
+                EnsureTenantIsActive::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
@@ -129,7 +155,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                EnsureAdminPanelAccess::class,
             ]);
     }
 }

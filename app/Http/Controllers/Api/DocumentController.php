@@ -31,8 +31,8 @@ class DocumentController extends Controller
 
         // Non-admin users may only see their own documents (same logic as Portal).
         if (! $user->hasAnyRole(['Administrator', 'Sachbearbeiter'])) {
-            $renter = $user->renter ?? Renter::where('user_id', $user->id)->first() ?? Renter::where('email', $user->email)->first();
-            $owner = $user->owner ?? Owner::where('user_id', $user->id)->first() ?? Owner::where('email', $user->email)->first();
+            $renter = $user->resolvedRenter();
+            $owner = $user->resolvedOwner();
 
             if ($renter) {
                 $unitIds = $renter->units()->pluck('id')->toArray();

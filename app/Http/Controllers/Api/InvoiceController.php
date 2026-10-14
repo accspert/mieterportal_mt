@@ -64,6 +64,9 @@ class InvoiceController extends Controller
 
     public function pdf(Invoice $invoice, InvoicePdfService $pdfService): Response
     {
+        // authorizeResource() only covers the resource methods.
+        $this->authorize('view', $invoice);
+
         return $pdfService->streamResponse($invoice);
     }
 

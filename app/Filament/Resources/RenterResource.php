@@ -9,6 +9,7 @@ use App\Models\Renter;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\CsvExportService;
+use App\Services\PortalAccessService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -28,8 +29,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use RuntimeException;
 use UnitEnum;
 
 class RenterResource extends Resource
@@ -101,7 +101,7 @@ class RenterResource extends Resource
             Forms\Components\TextInput::make('first_name')->label('Vorname')->required()->maxLength(255),
             Forms\Components\TextInput::make('last_name')->label('Nachname')->required()->maxLength(255),
             Forms\Components\TextInput::make('email')->label('E-Mail')->email()->maxLength(255)->nullable(),
-            Forms\Components\TextInput::make('phone')->label('Telefon')->maxLength(50)->nullable(),
+            Forms\Components\TextInput::make('phone')->label('Telefon')->placeholder('+41 79 123 45 67')->maxLength(50)->nullable(),
             Forms\Components\Select::make('manager_id')
                 ->label('Zuständiger Sachbearbeiter')
                 ->relationship('manager', 'name')
@@ -228,14 +228,14 @@ class RenterResource extends Resource
                     }),
             ])
             ->actions([
-                Action::make('createUserAccount')
-                    ->label('Konto anlegen')
+                Action::make('invitePortalAccess')
+                    ->label('Zugang einladen')
                     ->icon('heroicon-o-user-plus')
                     ->color('success')
                     ->visible(fn (Renter $record): bool => $record->user_id === null)
-                    ->modalHeading(fn (Renter $record): string => "Portal-Zugang für {$record->first_name} {$record->last_name} erstellen")
-                    ->modalDescription('Ein Benutzerkonto wird angelegt und dem Mieter zugeordnet. Sie können den zuständigen Sachbearbeiter festlegen und das generierte Passwort kopieren.')
-                    ->modalSubmitActionLabel('Benutzerkonto jetzt anlegen')
+                    ->modalHeading(fn (Renter $record): string => "Portal-Zugang für {$record->first_name} {$record->last_name}")
+                    ->modalDescription('Der Mieter erhält eine Einladung per E-Mail und legt sein Passwort selbst fest. Niemand bei der Verwaltung sieht das Passwort.')
+                    ->modalSubmitActionLabel('Einladung senden')
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label('Vollständiger Name')
@@ -243,7 +243,7 @@ class RenterResource extends Resource
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('email')
-                            ->label('E-Mail-Adresse (Login-Benutzername)')
+                            ->label('E-Mail-Adresse (Login)')
                             ->email()
                             ->default(fn (Renter $record): ?string => $record->email)
                             ->required()
@@ -256,73 +256,39 @@ class RenterResource extends Resource
                             ->preload()
                             ->required()
                             ->helperText('Der ausgewählte Sachbearbeiter wird für diesen Mieter als Ansprechpartner und für Schadensmeldungen hinterlegt.'),
-                        Forms\Components\TextInput::make('password')
-                            ->label('Generiertes Initial-Passwort')
-                            ->default(fn (): string => Str::password(10, true, true, false, false))
-                            ->helperText('Dieses Passwort bitte kopieren und dem Mieter für die Erstanmeldung im Mieterportal übergeben.')
-                            ->required()
-                            ->maxLength(255),
                     ])
-                    ->action(function (Renter $record, array $data): void {
-                        $user = User::where('email', $data['email'])->first();
-                        if ($user) {
-                            $user->update([
-                                'name' => $data['name'],
-                                'password' => Hash::make($data['password']),
-                            ]);
-                        } else {
-                            $user = User::create([
-                                'name' => $data['name'],
-                                'email' => $data['email'],
-                                'password' => Hash::make($data['password']),
-                                'email_verified_at' => now(),
-                            ]);
+                    ->action(function (Renter $record, array $data, PortalAccessService $portalAccess): void {
+                        try {
+                            $portalAccess->invite($record, $data['email'], $data['name']);
+                        } catch (RuntimeException $exception) {
+                            Notification::make()->title('Kein Zugang angelegt')->body($exception->getMessage())->danger()->send();
+
+                            return;
                         }
 
-                        $user->assignRole('Mieter');
-
-                        $record->update([
-                            'user_id' => $user->id,
-                            'email' => $data['email'],
-                            'manager_id' => $data['manager_id'] ?? $record->manager_id,
-                        ]);
+                        $record->update(['manager_id' => $data['manager_id'] ?? $record->manager_id]);
 
                         Notification::make()
-                            ->title('Benutzerkonto erfolgreich angelegt')
-                            ->body("Zugangsdaten für {$data['name']}:\nE-Mail: {$data['email']}\nPasswort: {$data['password']}")
+                            ->title('Einladung gesendet')
+                            ->body("{$data['name']} erhält eine E-Mail an {$data['email']} und legt das Passwort selbst fest.")
                             ->success()
-                            ->duration(20000)
                             ->send();
                     }),
 
-                Action::make('resetPassword')
-                    ->label('Passwort neu')
+                Action::make('sendPasswordLink')
+                    ->label('Passwort-Link senden')
                     ->icon('heroicon-o-key')
                     ->color('warning')
                     ->visible(fn (Renter $record): bool => $record->user_id !== null)
-                    ->modalHeading(fn (Renter $record): string => "Neues Passwort für {$record->first_name} {$record->last_name} generieren")
-                    ->modalDescription('Generiert ein neues Login-Passwort für das bestehende Portal-Konto des Mieters.')
-                    ->modalSubmitActionLabel('Neues Passwort speichern')
-                    ->schema([
-                        Forms\Components\TextInput::make('password')
-                            ->label('Neues generiertes Passwort')
-                            ->default(fn (): string => Str::password(10, true, true, false, false))
-                            ->helperText('Kopieren Sie dieses neue Passwort für den Mieter.')
-                            ->required()
-                            ->maxLength(255),
-                    ])
-                    ->action(function (Renter $record, array $data): void {
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Renter $record): string => "Passwort-Link an {$record->first_name} {$record->last_name} senden")
+                    ->modalDescription('Der Mieter erhält eine E-Mail mit einem Link, über den er ein neues Passwort festlegt.')
+                    ->modalSubmitActionLabel('Link senden')
+                    ->action(function (Renter $record, PortalAccessService $portalAccess): void {
                         if ($record->user) {
-                            $record->user->update([
-                                'password' => Hash::make($data['password']),
-                            ]);
+                            $portalAccess->sendPasswordLink($record->user);
 
-                            Notification::make()
-                                ->title('Passwort erfolgreich zurückgesetzt')
-                                ->body("Neues Passwort für {$record->first_name} {$record->last_name} ({$record->email}):\n{$data['password']}")
-                                ->success()
-                                ->duration(20000)
-                                ->send();
+                            Notification::make()->title('Passwort-Link gesendet')->body("E-Mail an {$record->user->email} wurde versendet.")->success()->send();
                         }
                     }),
 
@@ -432,58 +398,36 @@ class RenterResource extends Resource
                 ForceDeleteAction::make(),
             ])
             ->bulkActions([
-                BulkAction::make('createSelectedUserAccounts')
-                    ->label('Portal-Konten für Ausgewählte anlegen')
+                BulkAction::make('inviteSelectedPortalAccess')
+                    ->label('Portal-Zugänge einladen')
                     ->icon('heroicon-o-user-plus')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->modalHeading('Portal-Konten generieren')
-                    ->modalDescription('Für alle ausgewählten Mieter ohne bestehendes Benutzerkonto werden automatisch Zugangsdaten mit sicherem Initial-Passwort angelegt.')
-                    ->action(function (Collection $records): void {
-                        $created = 0;
-                        $credentials = [];
+                    ->modalHeading('Portal-Zugänge einladen')
+                    ->modalDescription('Alle ausgewählten Mieter ohne Zugang erhalten eine Einladung per E-Mail und legen ihr Passwort selbst fest.')
+                    ->action(function (Collection $records, PortalAccessService $portalAccess): void {
+                        $invited = 0;
+                        $skipped = [];
 
                         foreach ($records as $renter) {
-                            if (! $renter->user_id && $renter->email) {
-                                $plainPassword = Str::password(10, true, true, false, false);
-                                $name = "{$renter->first_name} {$renter->last_name}";
+                            if ($renter->user_id !== null) {
+                                continue;
+                            }
 
-                                $user = User::where('email', $renter->email)->first();
-                                if (! $user) {
-                                    $user = User::create([
-                                        'name' => $name,
-                                        'email' => $renter->email,
-                                        'password' => Hash::make($plainPassword),
-                                        'email_verified_at' => now(),
-                                    ]);
-                                } else {
-                                    $user->update([
-                                        'password' => Hash::make($plainPassword),
-                                    ]);
-                                }
-
-                                $user->assignRole('Mieter');
-                                $renter->update(['user_id' => $user->id]);
-
-                                $created++;
-                                $credentials[] = "{$name} ({$renter->email}): {$plainPassword}";
+                            try {
+                                $portalAccess->invite($renter);
+                                $invited++;
+                            } catch (RuntimeException $exception) {
+                                $skipped[] = "{$renter->first_name} {$renter->last_name}: {$exception->getMessage()}";
                             }
                         }
 
-                        if ($created > 0) {
-                            Notification::make()
-                                ->title("{$created} Benutzerkonten angelegt")
-                                ->body("Erstellte Zugänge:\n".implode("\n", array_slice($credentials, 0, 5)).($created > 5 ? "\n... und weitere" : ''))
-                                ->success()
-                                ->duration(25000)
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title('Keine neuen Konten erstellt')
-                                ->body('Alle ausgewählten Mieter besitzen bereits ein Konto oder haben keine E-Mail-Adresse hinterlegt.')
-                                ->warning()
-                                ->send();
-                        }
+                        Notification::make()
+                            ->title($invited > 0 ? "{$invited} Einladungen gesendet" : 'Keine Einladungen gesendet')
+                            ->body($skipped === [] ? null : "Nicht eingeladen:\n".implode("\n", array_slice($skipped, 0, 5)).(count($skipped) > 5 ? "\n… und weitere" : ''))
+                            ->status($skipped === [] ? 'success' : 'warning')
+                            ->duration(20000)
+                            ->send();
                     }),
                 BulkAction::make('exportSelectedCsv')
                     ->label('Ausgewählte exportieren (CSV)')

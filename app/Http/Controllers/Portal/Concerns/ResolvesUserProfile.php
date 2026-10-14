@@ -12,11 +12,8 @@ use App\Models\User;
  * Provides a canonical way to resolve the Renter and Owner profiles for the
  * currently authenticated user.
  *
- * Both methods delegate to User::resolvedRenter() / User::resolvedOwner()
- * which implement the authoritative 3-step fallback:
- *   1. HasOne relation (user_id FK)
- *   2. Direct user_id lookup
- *   3. E-mail match as a last-resort fallback
+ * Both methods delegate to User::resolvedRenter() / User::resolvedOwner(),
+ * which link profiles exclusively via the user_id foreign key.
  *
  * Usage in any Portal controller:
  *   use App\Http\Controllers\Portal\Concerns\ResolvesUserProfile;

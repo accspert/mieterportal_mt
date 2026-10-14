@@ -32,3 +32,7 @@ login.html
 ~$*
 /Rechnung-*.pdf
 
+
+# Nicht ins Git (lokale Daten, Archive, Zugangsdaten)
+/bereits_angeschrieben.txt
+/storage/tenant_test/

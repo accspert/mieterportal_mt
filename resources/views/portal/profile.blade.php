@@ -49,7 +49,7 @@
 
             <div class="form-group">
                 <label class="form-label" for="phone">Telefon- / Mobilnummer (für Rückfragen)</label>
-                <input type="text" id="phone" name="phone" class="form-control" placeholder="+49 170 1234567" value="{{ old('phone', $tenant?->phone ?? $owner?->phone) }}">
+                <input type="text" id="phone" name="phone" class="form-control" placeholder="+41 79 123 45 67" value="{{ old('phone', $tenant?->phone ?? $owner?->phone) }}">
             </div>
 
             <div class="d-flex" style="justify-content: flex-end; margin-top: 16px;">

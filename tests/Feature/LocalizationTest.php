@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Database\Seeders\InitialSetupSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
@@ -11,16 +12,20 @@ class LocalizationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected User $user;
+
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(InitialSetupSeeder::class);
+
+        $this->user = User::factory()->create();
+        $this->user->assignRole('Mieter');
     }
 
     public function test_application_defaults_to_german(): void
     {
-        $response = $this->get('/portal/login');
-        $response->assertStatus(200);
+        $this->actingAs($this->user)->get('/portal/profile')->assertOk()->assertSee('Abmelden');
         $this->assertEquals('de', App::getLocale());
     }
 
@@ -31,9 +36,9 @@ class LocalizationTest extends TestCase
         $response->assertSessionHas('locale', 'en');
 
         // Subsequent request uses English
-        $portalResponse = $this->withSession(['locale' => 'en'])->get('/portal/login');
+        $portalResponse = $this->actingAs($this->user)->withSession(['locale' => 'en'])->get('/portal/profile');
         $portalResponse->assertStatus(200);
-        $portalResponse->assertSee('Customer Portal');
+        $portalResponse->assertSee('Log Out');
         $this->assertEquals('en', App::getLocale());
     }
 
@@ -43,9 +48,9 @@ class LocalizationTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('locale', 'de');
 
-        $portalResponse = $this->withSession(['locale' => 'de'])->get('/portal/login');
+        $portalResponse = $this->actingAs($this->user)->withSession(['locale' => 'de'])->get('/portal/profile');
         $portalResponse->assertStatus(200);
-        $portalResponse->assertSee('Kundenportal');
+        $portalResponse->assertSee('Abmelden');
         $this->assertEquals('de', App::getLocale());
     }
 
@@ -54,7 +59,7 @@ class LocalizationTest extends TestCase
         $response = $this->get(route('locale.switch', 'invalid_lang'));
         $response->assertRedirect();
 
-        $portalResponse = $this->withSession(['locale' => 'invalid_lang'])->get('/portal/login');
+        $portalResponse = $this->actingAs($this->user)->withSession(['locale' => 'invalid_lang'])->get('/portal/profile');
         $portalResponse->assertStatus(200);
         $this->assertEquals('de', App::getLocale());
     }

@@ -5,14 +5,17 @@ namespace Tests\Feature;
 use App\Models\Invoice;
 use App\Models\Owner;
 use App\Models\Property;
+use App\Models\Renter;
 use App\Models\Tenant;
 use App\Models\Ticket;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\FileUploadService;
 use Database\Seeders\InitialSetupSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class InvoicePdfAndUploadTest extends TestCase
@@ -79,6 +82,23 @@ class InvoicePdfAndUploadTest extends TestCase
         $response->assertStatus(403);
     }
 
+    public function test_api_pdf_download_is_restricted_to_authorized_users(): void
+    {
+        $this->invoice->update(['renter_id' => $this->tenant->id]);
+
+        $otherRenterUser = User::factory()->create();
+        $otherRenterUser->assignRole('Mieter');
+        Renter::factory()->create(['user_id' => $otherRenterUser->id]);
+
+        Sanctum::actingAs($otherRenterUser);
+        $this->get('/api/invoices/'.$this->invoice->id.'/pdf')->assertForbidden();
+
+        Sanctum::actingAs($this->tenantUser);
+        $this->get('/api/invoices/'.$this->invoice->id.'/pdf')
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
     public function test_api_client_can_download_invoice_pdf(): void
     {
         $admin = User::factory()->create();
@@ -120,5 +140,38 @@ class InvoicePdfAndUploadTest extends TestCase
         $attachment2 = $ticket->attachments->last();
         $this->assertEquals('reparatur_angebot.pdf', $attachment2->filename);
         Storage::disk('public')->assertExists($attachment2->path);
+    }
+
+    public function test_portal_rejects_attachments_with_php_file_name(): void
+    {
+        Storage::fake('public');
+
+        $image = UploadedFile::fake()->image('foto.png');
+        $disguisedImage = new UploadedFile($image->getRealPath(), 'schaden.php', null, null, true);
+
+        $this->actingAs($this->tenantUser)->post('/portal/tickets', [
+            'title' => 'Getarnter Upload',
+            'description' => 'Bild mit PHP-Endung.',
+            'category' => 'repair',
+            'priority' => 'low',
+            'attachments' => [$disguisedImage],
+        ])->assertSessionHasErrors('attachments.0');
+
+        $this->assertDatabaseMissing('tickets', ['title' => 'Getarnter Upload']);
+    }
+
+    public function test_upload_service_derives_stored_extension_from_file_content_not_client_name(): void
+    {
+        Storage::fake('public');
+
+        $image = UploadedFile::fake()->image('foto.png');
+        $disguisedImage = new UploadedFile($image->getRealPath(), 'schaden.phtml', null, null, true);
+        $ticket = Ticket::factory()->create();
+
+        $attachment = app(FileUploadService::class)->storeAttachment($disguisedImage, $ticket, $this->tenantUser);
+
+        $this->assertStringEndsWith('.png', $attachment->path);
+        $this->assertSame('schaden.phtml', $attachment->filename);
+        Storage::disk('public')->assertExists($attachment->path);
     }
 }

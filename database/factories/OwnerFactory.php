@@ -20,7 +20,7 @@ class OwnerFactory extends Factory
             'street' => $this->faker->streetAddress,
             'postal_code' => $this->faker->postcode,
             'city' => $this->faker->city,
-            'country' => 'DE',
+            'country' => 'CH',
         ];
     }
 }

@@ -4,16 +4,22 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Services\PortalAccessService;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
+use Spatie\Permission\Models\Role;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -67,24 +73,25 @@ class UserResource extends Resource
                 ->unique(ignoreRecord: true)
                 ->maxLength(255),
 
-            Forms\Components\TextInput::make('password')
-                ->label('Passwort')
-                ->password()
-                ->revealable()
-                ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
-                ->dehydrated(fn ($state) => filled($state))
-                ->required(fn (string $context): bool => $context === 'create')
-                ->minLength(8)
-                ->maxLength(255)
-                ->helperText('Mindestens 8 Zeichen. Beim Bearbeiten leer lassen, um das bisherige Passwort beizubehalten.'),
-
             Forms\Components\Select::make('roles')
                 ->label('Zugeordnete Rollen')
-                ->relationship('roles', 'name')
+                // New accounts here are staff; renters and owners are invited from their own records,
+                // so that their account is linked to the renter/owner record.
+                ->relationship('roles', 'name', modifyQueryUsing: fn (Builder $query, string $operation): Builder => $operation === 'create'
+                    ? $query->whereIn('name', ['Administrator', 'Sachbearbeiter'])
+                    : $query)
                 ->multiple()
                 ->preload()
                 ->searchable()
-                ->required(),
+                ->required()
+                // The option list is not enforced by Filament: check every submitted role on the server.
+                ->nestedRecursiveRules(
+                    [fn (): In => Rule::in(Role::query()->whereIn('name', ['Administrator', 'Sachbearbeiter'])->pluck('id')->all())],
+                    condition: fn (string $operation): bool => $operation === 'create',
+                )
+                ->helperText(fn (string $operation): ?string => $operation === 'create'
+                    ? 'Die Person erhält eine Einladung per E-Mail und legt ihr Passwort selbst fest. Mieter und Eigentümer laden Sie unter «Mieter» bzw. «Eigentümer» ein.'
+                    : null),
         ]);
     }
 
@@ -113,6 +120,18 @@ class UserResource extends Resource
                     ->relationship('roles', 'name'),
             ])
             ->actions([
+                Action::make('sendPasswordLink')
+                    ->label('Passwort-Link senden')
+                    ->icon('heroicon-o-key')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalDescription('Die Person erhält eine E-Mail mit einem Link, über den sie ein neues Passwort festlegt.')
+                    ->modalSubmitActionLabel('Link senden')
+                    ->action(function (User $record, PortalAccessService $portalAccess): void {
+                        $portalAccess->sendPasswordLink($record);
+
+                        Notification::make()->title('Passwort-Link gesendet')->body("E-Mail an {$record->email} wurde versendet.")->success()->send();
+                    }),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

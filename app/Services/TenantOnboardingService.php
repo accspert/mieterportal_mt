@@ -7,74 +7,53 @@ namespace App\Services;
 use App\Models\CompanyTenant;
 use App\Models\User;
 use Database\Seeders\InitialSetupSeeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TenantOnboardingService
 {
     /**
-     * Erstellt eine neue Hausverwaltung inklusive isolierter DB, Subdomain und Initial-Admin.
+     * Creates a property management and invites its first administrator.
+     *
+     * All property managements share one database, so this is just the tenant record and the
+     * admin account. The invitation is sent after the transaction has been committed.
+     *
+     * @param  array{company_name: string, slug: string, admin_name: string, admin_email: string, phone?: string|null, plan?: string|null}  $data
      */
     public function createTenant(array $data): CompanyTenant
     {
-        $slug = Str::slug($data['subdomain']);
-        $centralDomains = config('tenancy.central_domains', ['mieterportal-demo.eu']);
-        $centralDomain = $centralDomains[0] ?? 'mieterportal-demo.eu';
-        $domain = "{$slug}.{$centralDomain}";
+        // Roles and permissions are shared by all property managements.
+        (new InitialSetupSeeder)->run();
 
-        $tenant = null;
-
-        try {
-            // 1. Tenant Datensatz anlegen (triggert automatisch DB-Erstellung & Tenant-Migrationen)
+        [$tenant, $admin] = DB::transaction(function () use ($data): array {
             $tenant = CompanyTenant::create([
-                'id' => $slug,
+                'id' => Str::slug($data['slug']),
                 'company_name' => $data['company_name'],
                 'email' => $data['admin_email'],
                 'phone' => $data['phone'] ?? null,
-                'plan' => $data['plan'] ?? 'standard',
+                'plan' => $data['plan'] ?? config('plans.default'),
                 'is_active' => true,
             ]);
 
-            // 2. Primäre Subdomain anlegen (slug für Subdomain-Resolver + optional FQDN)
-            $tenant->domains()->create([
-                'domain' => $slug,
-            ]);
-
-            // Falls direkt eine Custom Domain übergeben wurde:
-            if (! empty($data['custom_domain'])) {
-                $tenant->domains()->create([
-                    'domain' => strtolower(trim($data['custom_domain'])),
-                ]);
-            }
-
-            // 3. Im Kontext des neuen Mandanten Rollen initialisieren und den ersten Administrator anlegen
-            $tenant->run(function () use ($data) {
-                // Rollen & Berechtigungen in der neuen Mandanten-DB anlegen
-                (new InitialSetupSeeder)->run();
-
+            $admin = $tenant->run(function () use ($data): User {
+                // The administrator sets the password via the invitation link.
                 $admin = User::create([
                     'name' => $data['admin_name'],
-                    'email' => $data['admin_email'],
-                    'password' => Hash::make($data['admin_password']),
+                    'email' => mb_strtolower($data['admin_email']),
+                    'password' => Str::password(40),
                     'email_verified_at' => now(),
                 ]);
 
-                // Weisen wir die Administrator-Rolle zu
                 $admin->assignRole('Administrator');
+
+                return $admin;
             });
 
-            return $tenant;
-        } catch (\Throwable $e) {
-            // Rollback bei Fehler
-            if ($tenant) {
-                try {
-                    $tenant->delete();
-                } catch (\Throwable $cleanupException) {
-                    // Ignore cleanup error
-                }
-            }
+            return [$tenant, $admin];
+        });
 
-            throw $e;
-        }
+        $tenant->run(fn () => $admin->sendInvitation($tenant->company_name));
+
+        return $tenant;
     }
 }

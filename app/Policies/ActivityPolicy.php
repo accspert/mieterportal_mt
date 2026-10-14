@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
+use App\Models\Activity;
 use App\Models\User;
-use Spatie\Activitylog\Models\Activity;
 
 class ActivityPolicy
 {

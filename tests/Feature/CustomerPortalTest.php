@@ -10,7 +10,9 @@ use App\Models\Tenant;
 use App\Models\Ticket;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\CentralLoginService;
 use Database\Seeders\InitialSetupSeeder;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -55,28 +57,31 @@ class CustomerPortalTest extends TestCase
 
     public function test_guest_is_redirected_to_portal_login(): void
     {
-        $this->get('/')->assertRedirect(route('portal.login'));
+        $this->get('/')->assertOk()->assertSee('Weniger Telefon.');
         $this->get('/portal/dashboard')->assertRedirect(route('login'));
         $this->get('/portal/tickets')->assertRedirect(route('login'));
     }
 
-    public function test_login_page_renders_successfully(): void
+    public function test_portal_login_forwards_to_the_single_central_login(): void
     {
-        $response = $this->get('/portal/login');
-        $response->assertStatus(200);
-        $response->assertSee('Mieterportal');
+        $this->get('/portal/login')->assertRedirect(CentralLoginService::loginUrl());
     }
 
-    public function test_tenant_can_login_and_access_dashboard(): void
+    public function test_central_login_never_shows_demo_credentials(): void
     {
-        $response = $this->post('/portal/login', [
-            'email' => 'tenant.test@kundenportal.local',
-            'password' => 'secret123',
-        ]);
+        foreach ([false, true] as $isDemoMode) {
+            config(['app.demo_mode' => $isDemoMode]);
 
-        $response->assertRedirect(route('portal.dashboard'));
-        $this->assertAuthenticatedAs($this->tenantUser);
+            $this->get(route('central.login'))
+                ->assertOk()
+                ->assertDontSee('Demo-Zugänge')
+                ->assertDontSee('kundenportal.local')
+                ->assertDontSee('data-demo-email', false);
+        }
+    }
 
+    public function test_tenant_can_access_dashboard(): void
+    {
         $dashboard = $this->actingAs($this->tenantUser)->get('/portal/dashboard');
         $dashboard->assertStatus(200);
         $dashboard->assertSee('Guten Tag, '.$this->tenantUser->name);
@@ -187,7 +192,7 @@ class CustomerPortalTest extends TestCase
     public function test_tenant_can_logout(): void
     {
         $response = $this->actingAs($this->tenantUser)->post('/portal/logout');
-        $response->assertRedirect(route('portal.login'));
+        $response->assertRedirect(CentralLoginService::loginUrl(['abgemeldet' => 1]));
         $this->assertGuest();
     }
 
@@ -195,5 +200,31 @@ class CustomerPortalTest extends TestCase
     {
         $response = $this->actingAs($this->tenantUser)->get('/admin');
         $response->assertRedirect(route('portal.dashboard'));
+    }
+
+    public function test_only_staff_can_access_admin_panel(): void
+    {
+        $panel = Filament::getPanel('admin');
+
+        $staff = User::factory()->create();
+        $staff->assignRole('Sachbearbeiter');
+
+        $this->assertFalse($this->tenantUser->canAccessPanel($panel));
+        $this->assertTrue($staff->canAccessPanel($panel));
+    }
+
+    public function test_central_login_is_rate_limited(): void
+    {
+        foreach (range(1, 5) as $attempt) {
+            $this->post(route('central.login.attempt'), [
+                'email' => $this->tenantUser->email,
+                'password' => 'falsches-passwort',
+            ])->assertSessionHasErrors('email');
+        }
+
+        $this->post(route('central.login.attempt'), [
+            'email' => $this->tenantUser->email,
+            'password' => 'falsches-passwort',
+        ])->assertTooManyRequests();
     }
 }

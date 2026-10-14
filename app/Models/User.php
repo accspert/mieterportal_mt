@@ -3,7 +3,16 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\BelongsToCompanyTenant;
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\UserInvitationNotification;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\Email\Concerns\InteractsWithEmailAuthentication;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,17 +20,40 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Password;
 use Laravel\Sanctum\HasApiTokens;
+use SensitiveParameter;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+    use BelongsToCompanyTenant, HasApiTokens, HasFactory, HasRoles, InteractsWithAppAuthentication, InteractsWithAppAuthenticationRecovery, InteractsWithEmailAuthentication, Notifiable;
+
+    /**
+     * Users with a second factor must pass a challenge before the login is completed.
+     */
+    public function hasMultiFactorAuthentication(): bool
+    {
+        return filled($this->getAppAuthenticationSecret()) || $this->hasEmailAuthentication();
+    }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        if ($panel->getId() === 'superadmin') {
+            return $this->isSuperAdmin();
+        }
+
+        return $this->hasAnyRole(['Administrator', 'Sachbearbeiter']);
+    }
+
+    /**
+     * Platform operator: manages all property managements and users in /superadmin.
+     * Deliberately not mass assignable; only set via `php artisan superadmin:create` or by another super admin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return (bool) $this->is_super_admin;
     }
 
     /**
@@ -55,7 +87,26 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_super_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Portal password reset; the Filament panel sends its own reset notification.
+     */
+    public function sendPasswordResetNotification(#[SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Sends an invitation link to set the first password.
+     */
+    public function sendInvitation(string $companyName): void
+    {
+        $token = Password::broker('invitations')->createToken($this);
+
+        $this->notify(new UserInvitationNotification($token, $companyName));
     }
 
     public function renter(): HasOne
@@ -84,30 +135,24 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Resolve the Renter profile for this user using the canonical 3-step fallback:
-     * 1. HasOne relation (user_id FK)
-     * 2. Lookup by user_id
-     * 3. Lookup by matching email
+     * Resolve the Renter profile linked to this user.
      *
-     * Use this instead of `$user->renter` in contexts where the relation may not
-     * have been set via user_id (e.g., in Policies or non-controller code).
+     * Profiles are linked exclusively via the user_id foreign key. Matching by e-mail
+     * is deliberately not supported: users can change their own e-mail address and
+     * would otherwise gain access to a foreign renter profile.
      */
     public function resolvedRenter(): ?Renter
     {
-        return $this->renter
-            ?? Renter::where('user_id', $this->id)->first()
-            ?? Renter::where('email', $this->email)->first();
+        return $this->renter;
     }
 
     /**
-     * Resolve the Owner profile for this user using the canonical 3-step fallback.
+     * Resolve the Owner profile linked to this user.
      *
      * @see resolvedRenter()
      */
     public function resolvedOwner(): ?Owner
     {
-        return $this->owner
-            ?? Owner::where('user_id', $this->id)->first()
-            ?? Owner::where('email', $this->email)->first();
+        return $this->owner;
     }
 }

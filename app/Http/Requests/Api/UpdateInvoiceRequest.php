@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Models\Invoice;
+use App\Rules\TenantScoped;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateInvoiceRequest extends FormRequest
@@ -22,11 +23,11 @@ class UpdateInvoiceRequest extends FormRequest
         $invoiceId = $invoice ? $invoice->id : null;
 
         return [
-            'invoice_number' => 'sometimes|required|string|max:255|unique:invoices,invoice_number,'.$invoiceId,
-            'renter_id' => 'nullable|exists:renters,id',
-            'tenant_id' => 'nullable|exists:renters,id',
-            'owner_id' => 'nullable|exists:owners,id',
-            'unit_id' => 'nullable|exists:units,id',
+            'invoice_number' => ['sometimes', 'required', 'string', 'max:255', TenantScoped::unique('invoices', 'invoice_number')->ignore($invoiceId)],
+            'renter_id' => ['nullable', TenantScoped::exists('renters')],
+            'tenant_id' => ['nullable', TenantScoped::exists('renters')],
+            'owner_id' => ['nullable', TenantScoped::exists('owners')],
+            'unit_id' => ['nullable', TenantScoped::exists('units')],
             'amount' => 'sometimes|required|numeric|min:0',
             'due_date' => 'sometimes|required|date',
             'status' => 'sometimes|required|in:draft,sent,paid,overdue,cancelled',

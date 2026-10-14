@@ -175,18 +175,22 @@ class DocumentResource extends Resource
                     return match ($type) {
                         Renter::class => Renter::all()->mapWithKeys(function ($t) {
                             $label = "{$t->first_name} {$t->last_name}".($t->email ? " ({$t->email})" : '');
+
                             return [$t->id => mb_convert_encoding($label, 'UTF-8', 'UTF-8')];
                         }),
                         Property::class => Property::all()->mapWithKeys(function ($p) {
                             $label = "{$p->name}".($p->city ? " ({$p->city})" : '');
+
                             return [$p->id => mb_convert_encoding($label, 'UTF-8', 'UTF-8')];
                         }),
                         Unit::class => Unit::with('property')->get()->mapWithKeys(function ($u) {
                             $label = "Einheit {$u->number}".($u->property ? " - {$u->property->name}" : '');
+
                             return [$u->id => mb_convert_encoding($label, 'UTF-8', 'UTF-8')];
                         }),
                         Owner::class => Owner::all()->mapWithKeys(function ($o) {
                             $label = $o->company_name ?: "{$o->first_name} {$o->last_name}";
+
                             return [$o->id => mb_convert_encoding($label, 'UTF-8', 'UTF-8')];
                         }),
                         default => [],
@@ -337,7 +341,7 @@ class DocumentResource extends Resource
 
                         return $query->where('documentable_type', Unit::class)->where('documentable_id', $data['value']);
                     }),
-                Tables\Filters\TrashedFilter::make(),
+                TrashedFilter::make(),
             ])
             ->actions([
                 Action::make('download')

@@ -40,6 +40,7 @@ class MonthlyRevenueChartWidget extends ChartWidget
 
             $monthInvoices = $invoices->filter(function ($inv) use ($year, $m) {
                 $c = Carbon::parse($inv->created_at);
+
                 return $c->year === $year && $c->month === $m;
             });
 

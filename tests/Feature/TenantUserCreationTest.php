@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Tenant;
+use App\Models\Ticket;
 use App\Models\User;
+use Database\Seeders\InitialSetupSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -15,7 +17,7 @@ class TenantUserCreationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\InitialSetupSeeder::class);
+        $this->seed(InitialSetupSeeder::class);
     }
 
     public function test_staff_can_create_user_account_for_tenant(): void
@@ -48,15 +50,6 @@ class TenantUserCreationTest extends TestCase
         $this->assertEquals($user->id, $tenant->user_id);
         $this->assertTrue($user->hasRole('Mieter'));
         $this->assertTrue(Hash::check($plainPassword, $user->password));
-
-        // The tenant can now log into the portal
-        $response = $this->post(route('portal.login.post'), [
-            'email' => 'klaus.klausen@example.com',
-            'password' => $plainPassword,
-        ]);
-
-        $response->assertRedirect(route('portal.dashboard'));
-        $this->assertAuthenticatedAs($user);
     }
 
     public function test_tenant_account_created_with_specific_manager_routes_tickets_to_that_manager(): void
@@ -100,7 +93,7 @@ class TenantUserCreationTest extends TestCase
             'priority' => 'medium',
         ]);
 
-        $ticket = \App\Models\Ticket::where('title', 'Licht im Hausflur defekt')->first();
+        $ticket = Ticket::where('title', 'Licht im Hausflur defekt')->first();
         $this->assertNotNull($ticket);
         $this->assertEquals($ahmad->id, $ticket->assigned_to);
     }

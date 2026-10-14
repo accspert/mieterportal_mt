@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\CentralLoginService;
 use Database\Seeders\InitialSetupSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,26 +19,13 @@ class AdminAuthTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_admin_user_authenticates_via_portal_login_and_redirects_to_admin(): void
+    public function test_guests_of_the_admin_panel_are_sent_to_the_central_login(): void
     {
-        $this->seed(InitialSetupSeeder::class);
-
-        $user = User::factory()->create([
-            'email' => 'admin@kundenportal.local',
-            'password' => bcrypt('password'),
-        ]);
-        $user->assignRole('Administrator');
-
-        $response = $this->post('/portal/login', [
-            'email' => 'admin@kundenportal.local',
-            'password' => 'password',
-        ]);
-
-        $response->assertRedirect('/admin');
-        $this->assertAuthenticatedAs($user);
+        $this->get('/admin')->assertRedirect(route('login'));
+        $this->get(route('login'))->assertRedirect(CentralLoginService::loginUrl());
     }
 
-    public function test_admin_logout_from_filament_redirects_to_portal_login(): void
+    public function test_admin_logout_from_filament_redirects_to_central_login(): void
     {
         $this->seed(InitialSetupSeeder::class);
 
@@ -49,7 +37,7 @@ class AdminAuthTest extends TestCase
 
         $response = $this->actingAs($user)->post('/admin/logout');
 
-        $response->assertRedirect('/portal/login');
+        $response->assertRedirect(CentralLoginService::loginUrl(['abgemeldet' => 1]));
         $this->assertGuest();
     }
 
@@ -76,7 +64,7 @@ class AdminAuthTest extends TestCase
             ->assertStatus(200);
 
         $this->actingAs($user)
-            ->get('/admin/tenants')
+            ->get('/admin/renters')
             ->assertStatus(200);
     }
 }

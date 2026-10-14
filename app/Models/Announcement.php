@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompanyTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Announcement extends Model
 {
-    use HasFactory, LogsActivity, SoftDeletes;
+    use BelongsToCompanyTenant, HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'title',

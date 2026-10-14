@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Models\Invoice;
+use App\Rules\TenantScoped;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreInvoiceRequest extends FormRequest
@@ -15,11 +16,11 @@ class StoreInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'invoice_number' => 'required|string|max:255|unique:invoices,invoice_number',
-            'renter_id' => 'nullable|exists:renters,id',
-            'tenant_id' => 'nullable|exists:renters,id',
-            'owner_id' => 'nullable|exists:owners,id',
-            'unit_id' => 'nullable|exists:units,id',
+            'invoice_number' => ['required', 'string', 'max:255', TenantScoped::unique('invoices', 'invoice_number')],
+            'renter_id' => ['nullable', TenantScoped::exists('renters')],
+            'tenant_id' => ['nullable', TenantScoped::exists('renters')],
+            'owner_id' => ['nullable', TenantScoped::exists('owners')],
+            'unit_id' => ['nullable', TenantScoped::exists('units')],
             'amount' => 'required|numeric|min:0',
             'due_date' => 'required|date',
             'status' => 'nullable|in:draft,sent,paid,overdue,cancelled',

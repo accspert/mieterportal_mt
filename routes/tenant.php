@@ -2,61 +2,41 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Portal\AuthController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\DocumentController;
 use App\Http\Controllers\Portal\InvoiceController;
 use App\Http\Controllers\Portal\MessageController;
 use App\Http\Controllers\Portal\NotificationController;
+use App\Http\Controllers\Portal\PasswordResetController;
 use App\Http\Controllers\Portal\ProfileController;
 use App\Http\Controllers\Portal\TicketController;
 use App\Http\Controllers\Portal\UnitController;
 use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Middleware\InitializeTenancyByDomainOrSubdomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 /*
 |--------------------------------------------------------------------------
-| Tenant Routes
+| Portal Routes
 |--------------------------------------------------------------------------
 |
-| These routes are loaded within tenant context (subdomain or custom domain).
-| Each request is bound to the isolated database and storage of the tenant.
+| The portal of renters and owners. All property managements share one domain and one
+| database; the 'web' group activates the property management of the logged-in user
+| (InitializeTenancyFromUser), which limits every query to its records.
 |
 */
 
-Route::middleware([
-    InitializeTenancyByDomainOrSubdomain::class,
-    PreventAccessFromCentralDomains::class,
-    'web',
-])->group(function () {
-
-    Route::get('locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
-
-    Route::get('/', function () {
-        if (auth()->check()) {
-            $user = auth()->user();
-            if ($user->hasRole('Administrator') || $user->hasRole('Sachbearbeiter')) {
-                return redirect(config('filament.path', '/admin'));
-            }
-
-            return redirect()->route('portal.dashboard');
-        }
-
-        return redirect()->route('portal.login');
-    });
-
-    // Default login alias for tenant auth
+Route::middleware('web')->group(function () {
+    // There is only one login (central.login); 'login' is where unauthenticated users are sent.
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
 
-    // Customer / Tenant Portal Routes
     Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-        Route::post('login', [AuthController::class, 'login'])->name('login.post');
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-        // Authenticated Routes inside Tenant DB
+        // Password reset & invitation links from the mails
+        Route::get('password/reset/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+        Route::post('password/reset', [PasswordResetController::class, 'reset'])->middleware('throttle:portal-login')->name('password.update');
+
         Route::middleware('auth')->group(function () {
             Route::get('/', fn () => redirect()->route('portal.dashboard'));
             Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

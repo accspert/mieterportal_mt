@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompanyTenant;
 use Database\Factories\RenterFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Renter extends Model
 {
     /** @use HasFactory<RenterFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToCompanyTenant, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',

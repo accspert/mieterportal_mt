@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Message;
@@ -10,11 +11,12 @@ use App\Models\Tenant;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\NewMessageNotification;
+use App\Notifications\TicketCreatedNotification;
 use App\Notifications\TicketStatusUpdatedNotification;
 use Database\Seeders\InitialSetupSeeder;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 class NotificationsAndAuditTest extends TestCase
@@ -148,5 +150,33 @@ class NotificationsAndAuditTest extends TestCase
 
         $response = $this->get('/admin/activities');
         $response->assertStatus(200);
+    }
+
+    public function test_all_mail_notifications_are_sent_through_the_queue(): void
+    {
+        $notificationClasses = collect(glob(app_path('Notifications/*.php')))
+            ->map(fn (string $path): string => 'App\\Notifications\\'.basename($path, '.php'));
+
+        $this->assertNotEmpty($notificationClasses);
+
+        foreach ($notificationClasses as $notificationClass) {
+            $this->assertTrue(
+                is_subclass_of($notificationClass, ShouldQueue::class),
+                "{$notificationClass} must implement ShouldQueue so a slow mail server never blocks a request."
+            );
+        }
+    }
+
+    public function test_new_ticket_mail_links_to_the_ticket_in_the_admin_panel(): void
+    {
+        $ticket = Ticket::factory()->create([
+            'created_by' => $this->tenantUser->id,
+            'tenant_id' => $this->tenant->id,
+        ]);
+
+        $mail = (new TicketCreatedNotification($ticket))->toMail($this->admin);
+
+        $this->assertSame(route('filament.admin.resources.tickets.edit', $ticket), $mail->actionUrl);
+        $this->get($mail->actionUrl)->assertRedirect();
     }
 }

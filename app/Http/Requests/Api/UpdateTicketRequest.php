@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Rules\TenantScoped;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTicketRequest extends FormRequest
@@ -19,10 +20,10 @@ class UpdateTicketRequest extends FormRequest
             'category' => 'nullable|string|max:100',
             'priority' => 'nullable|in:low,medium,high,urgent',
             'status' => 'nullable|in:open,in_progress,waiting,done,archived',
-            'property_id' => 'nullable|exists:properties,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'renter_id' => 'nullable|exists:renters,id',
-            'tenant_id' => 'nullable|exists:renters,id',
+            'property_id' => ['nullable', TenantScoped::exists('properties')],
+            'unit_id' => ['nullable', TenantScoped::exists('units')],
+            'renter_id' => ['nullable', TenantScoped::exists('renters')],
+            'tenant_id' => ['nullable', TenantScoped::exists('renters')],
         ];
     }
 }

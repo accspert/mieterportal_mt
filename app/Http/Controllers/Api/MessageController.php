@@ -62,6 +62,8 @@ class MessageController extends Controller
 
     public function markAsRead(Request $request, Message $message): MessageResource
     {
+        $this->authorize('markAsRead', $message);
+
         $message->update(['read_at' => now()]);
 
         return new MessageResource($message->fresh(['sender', 'recipient']));

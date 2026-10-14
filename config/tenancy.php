@@ -3,11 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\CompanyTenant;
-use App\Models\Domain;
-use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
-use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
+use Stancl\Tenancy\Database\Models\Domain;
 use Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
@@ -20,12 +18,17 @@ return [
     'domain_model' => Domain::class,
 
     /**
-     * The list of domains hosting your central app.
-     *
-     * Only relevant if you're using the domain or subdomain identification middleware.
+     * Bearer token required for the tenant onboarding endpoint (POST /api/onboard).
+     * Onboarding is disabled entirely while no token is configured.
+     */
+    'onboarding_token' => env('TENANT_ONBOARDING_TOKEN'),
+
+    /**
+     * Domains of the platform. Property managements have no domains of their own: the tenant
+     * is determined from the logged-in user (App\Http\Middleware\InitializeTenancyFromUser).
      */
     'central_domains' => array_filter([
-        env('CENTRAL_DOMAIN', 'mieterportal-demo.eu'),
+        env('CENTRAL_DOMAIN', 'liegenschaftsportal.ch'),
         '127.0.0.1',
         'localhost',
     ]),
@@ -37,11 +40,10 @@ return [
      * To configure their behavior, see the config keys below.
      */
     'bootstrappers' => [
-        DatabaseTenancyBootstrapper::class,
-        CacheTenancyBootstrapper::class,
+        // All property managements share one database (scoped by company_tenant_id, see
+        // App\Models\Concerns\BelongsToCompanyTenant), so there is no database or cache switching.
         FilesystemTenancyBootstrapper::class,
         QueueTenancyBootstrapper::class,
-        // Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class,
     ],
 
     /**
@@ -112,7 +114,7 @@ return [
          * edge cases, it can cause issues (like using Passport with Vapor - see #196), so
          * you may want to disable this if you are experiencing these edge case issues.
          */
-        'suffix_storage_path' => false,
+        'suffix_storage_path' => true,
 
         /**
          * By default, asset() calls are made multi-tenant too. You can use global_asset() and mix()
@@ -164,7 +166,7 @@ return [
      * enabled. But it may be useful to disable them if you use external
      * storage (e.g. S3 / Dropbox) or have a custom asset controller.
      */
-    'routes' => true,
+    'routes' => false,
 
     /**
      * Parameters used by the tenants:migrate command.

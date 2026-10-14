@@ -6,6 +6,7 @@ use App\Filament\Resources\DocumentResource\Pages\CreateDocument;
 use App\Filament\Resources\InvoiceResource\Pages\CreateInvoice;
 use App\Filament\Resources\MessageResource\Pages\CreateMessage;
 use App\Filament\Resources\OwnerResource\Pages\CreateOwner;
+use App\Filament\Resources\PropertyResource\Pages\CreateProperty;
 use App\Filament\Resources\TaskResource\Pages\CreateTask;
 use App\Filament\Resources\TicketResource\Pages\CreateTicket;
 use App\Filament\Resources\UserResource\Pages\CreateUser;
@@ -123,7 +124,18 @@ class AdminResourcesTest extends TestCase
         $this->assertDatabaseHas('owners', [
             'company_name' => 'Immobilien Nord GmbH',
             'email' => 'mueller@immo-nord.local',
+            'country' => 'CH',
         ]);
+    }
+
+    public function test_new_owners_and_properties_default_to_switzerland(): void
+    {
+        $this->actingAs($this->admin);
+
+        Livewire::test(CreateOwner::class)->assertSchemaStateSet(['country' => 'CH']);
+        Livewire::test(CreateProperty::class)->assertSchemaStateSet(['country' => 'CH']);
+
+        $this->assertSame('CH', Owner::query()->create(['first_name' => 'Ohne', 'last_name' => 'Land'])->fresh()->country);
     }
 
     public function test_admin_can_create_document_via_filament(): void

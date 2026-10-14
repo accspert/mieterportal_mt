@@ -15,6 +15,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Validation\Rules\Unique;
 
 class InvoicesRelationManager extends RelationManager
 {
@@ -36,7 +37,7 @@ class InvoicesRelationManager extends RelationManager
                 ->default(fn () => 'RE-'.date('Y').'-'.strtoupper(substr(uniqid(), -6)))
                 ->required()
                 ->maxLength(255)
-                ->unique(Invoice::class, 'invoice_number', ignoreRecord: true),
+                ->unique(Invoice::class, 'invoice_number', ignoreRecord: true, modifyRuleUsing: fn (Unique $rule): Unique => $rule->where('company_tenant_id', tenant()?->getTenantKey())),
 
             Forms\Components\Select::make('unit_id')
                 ->label('Mieteinheit / Wohnung')

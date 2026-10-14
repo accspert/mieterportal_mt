@@ -7,7 +7,6 @@ use App\Models\Document;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Str;
 
 class FileUploadService
 {
@@ -16,8 +15,8 @@ class FileUploadService
      */
     public function storeAttachment(UploadedFile $file, Model $attachable, ?User $uploader = null, string $folder = 'attachments'): Attachment
     {
-        $safeName = Str::random(20).'.'.$file->getClientOriginalExtension();
-        $path = $file->storeAs($folder, $safeName, 'public');
+        // hashName() derives the extension from the file content, never from the client-supplied name.
+        $path = $file->store($folder, 'public');
 
         return Attachment::create([
             'attachable_type' => $attachable::class,
@@ -41,8 +40,8 @@ class FileUploadService
         int $version = 1,
         string $folder = 'documents'
     ): Document {
-        $safeName = Str::random(20).'.'.$file->getClientOriginalExtension();
-        $path = $file->storeAs($folder, $safeName, 'public');
+        // hashName() derives the extension from the file content, never from the client-supplied name.
+        $path = $file->store($folder, 'public');
 
         return Document::create([
             'documentable_type' => $documentable::class,

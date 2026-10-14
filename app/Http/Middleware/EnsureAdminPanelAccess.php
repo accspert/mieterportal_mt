@@ -14,7 +14,8 @@ class EnsureAdminPanelAccess
         $user = Auth::user();
 
         if ($user && ! $user->hasAnyRole(['Administrator', 'Sachbearbeiter'])) {
-            return redirect()->route('portal.dashboard');
+            // Platform operators have their own backoffice instead of a property management panel.
+            return $user->isSuperAdmin() ? redirect('/superadmin') : redirect()->route('portal.dashboard');
         }
 
         return $next($request);

@@ -8,7 +8,9 @@ class UserPolicy
 {
     public function before(User $user, string $ability): ?bool
     {
-        if ($user->hasRole('Administrator')) {
+        // Platform operators manage all accounts in /superadmin; administrators only see their own
+        // property management (users are scoped by company_tenant_id).
+        if ($user->isSuperAdmin() || $user->hasRole('Administrator')) {
             return true;
         }
 

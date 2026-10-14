@@ -18,7 +18,7 @@ class PropertyFactory extends Factory
             'street' => $this->faker->streetAddress,
             'postal_code' => $this->faker->postcode,
             'city' => $this->faker->city,
-            'country' => 'DE',
+            'country' => 'CH',
             'description' => $this->faker->paragraph,
             'contact_person' => $this->faker->name,
         ];

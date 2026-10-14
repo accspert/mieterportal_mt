@@ -30,6 +30,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Demo Mode
+    |--------------------------------------------------------------------------
+    |
+    | Allows seeding demo data (shared password "password") in production,
+    | e.g. for a public demo installation.
+    | Must stay disabled for real customer installations.
+    |
+    */
+
+    'demo_mode' => (bool) env('APP_DEMO_MODE', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Multi-Factor Authentication
+    |--------------------------------------------------------------------------
+    |
+    | Administrators and clerks must set up a second factor (authenticator app
+    | or email code) before they can use the admin panel.
+    |
+    */
+
+    'admin_mfa_required' => (bool) env('ADMIN_MFA_REQUIRED', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

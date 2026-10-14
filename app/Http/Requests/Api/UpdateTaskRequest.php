@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Models\Task;
+use App\Rules\TenantScoped;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTaskRequest extends FormRequest
@@ -23,7 +24,7 @@ class UpdateTaskRequest extends FormRequest
             'priority' => 'sometimes|required|in:low,medium,high,urgent',
             'status' => 'sometimes|required|in:pending,in_progress,completed,cancelled',
             'due_at' => 'nullable|date',
-            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_to' => ['nullable', TenantScoped::exists('users')],
             'related_type' => 'nullable|string|max:255',
             'related_id' => 'nullable|integer',
         ];

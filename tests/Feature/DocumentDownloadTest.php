@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\CompanyTenant;
 use App\Models\Document;
+use App\Models\Owner;
 use App\Models\Property;
 use App\Models\Renter;
 use App\Models\Tenant;
@@ -18,25 +18,10 @@ class DocumentDownloadTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected CompanyTenant $companyTenant;
-
-    protected string $tenantDomain;
-
     protected function setUp(): void
     {
         parent::setUp();
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
         $this->seed(InitialSetupSeeder::class);
-
-        $id = 'testfirma'.rand(1000, 9999);
-        $this->tenantDomain = $id.'.localhost';
-        $this->companyTenant = CompanyTenant::create([
-            'id' => $id,
-            'company_name' => 'Testverwaltung',
-            'email' => "info@{$id}.local",
-        ]);
-        $this->companyTenant->domains()->create(['domain' => $this->tenantDomain]);
-        $this->companyTenant->domains()->create(['domain' => $id]);
     }
 
     public function test_tenant_can_download_their_document(): void
@@ -55,7 +40,7 @@ class DocumentDownloadTest extends TestCase
             'category' => 'contract',
         ]);
 
-        $response = $this->actingAs($tenantUser)->get("http://{$this->tenantDomain}/portal/documents/{$doc->id}/download");
+        $response = $this->actingAs($tenantUser)->get("/portal/documents/{$doc->id}/download");
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/pdf');
@@ -77,7 +62,7 @@ class DocumentDownloadTest extends TestCase
             'filename' => 'Geheimer_Mietvertrag.pdf',
         ]);
 
-        $response = $this->actingAs($tenantUser2)->get("http://{$this->tenantDomain}/portal/documents/{$doc1->id}/download");
+        $response = $this->actingAs($tenantUser2)->get("/portal/documents/{$doc1->id}/download");
         $response->assertStatus(403);
     }
 
@@ -105,9 +90,42 @@ class DocumentDownloadTest extends TestCase
         $this->assertEquals('JPG', $doc->file_type_badge['label']);
         $this->assertEquals('Schadensfoto_Wohnzimmer.jpg', $doc->download_filename);
 
-        $response = $this->actingAs($tenantUser)->get("http://{$this->tenantDomain}/portal/documents/{$doc->id}/download");
+        $response = $this->actingAs($tenantUser)->get("/portal/documents/{$doc->id}/download");
 
         $response->assertStatus(200);
         $response->assertDownload('Schadensfoto_Wohnzimmer.jpg');
+    }
+
+    public function test_user_cannot_take_over_renter_documents_by_changing_email_to_renter_email(): void
+    {
+        $victim = Renter::factory()->create(['user_id' => null, 'email' => 'opfer@example.com']);
+        $victimDocument = Document::factory()->create([
+            'documentable_type' => Renter::class,
+            'documentable_id' => $victim->id,
+            'filename' => 'Mietvertrag_Opfer.pdf',
+            'category' => 'contract',
+            'uploaded_by' => null,
+        ]);
+
+        $attacker = User::factory()->create(['email' => 'angreifer@example.com']);
+        $attacker->assignRole('Eigentümer');
+        Owner::factory()->create(['user_id' => $attacker->id]);
+
+        $this->actingAs($attacker)->put('/portal/profile/contact', [
+            'first_name' => 'Eve',
+            'last_name' => 'Angreifer',
+            'email' => 'opfer@example.com',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertNull($attacker->fresh()->resolvedRenter());
+
+        $this->actingAs($attacker->fresh())
+            ->get("/portal/documents/{$victimDocument->id}/download")
+            ->assertForbidden();
+
+        $this->actingAs($attacker->fresh())
+            ->get('/portal/documents')
+            ->assertOk()
+            ->assertDontSee('Mietvertrag_Opfer.pdf');
     }
 }

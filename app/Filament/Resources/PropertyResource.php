@@ -109,7 +109,7 @@ class PropertyResource extends Resource
             Forms\Components\TextInput::make('street')->label('Straße & Hausnummer')->maxLength(255),
             Forms\Components\TextInput::make('postal_code')->label('Postleitzahl')->maxLength(20),
             Forms\Components\TextInput::make('city')->label('Stadt / Ort')->maxLength(100),
-            Forms\Components\TextInput::make('country')->label('Land')->maxLength(10)->default('DE'),
+            Forms\Components\TextInput::make('country')->label('Land')->maxLength(10)->default('CH'),
             Forms\Components\Textarea::make('description')->label('Beschreibung / Notizen')->rows(4)->maxLength(65535),
             Forms\Components\TextInput::make('contact_person')->label('Ansprechpartner vor Ort (optional)')->maxLength(255),
         ]);

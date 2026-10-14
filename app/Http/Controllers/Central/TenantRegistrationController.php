@@ -5,34 +5,26 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Central;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Central\StoreTenantRegistrationRequest;
 use App\Services\TenantOnboardingService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TenantRegistrationController extends Controller
 {
-    public function __construct(
-        protected TenantOnboardingService $onboardingService
-    ) {}
+    public function __construct(protected TenantOnboardingService $onboardingService) {}
 
-    public function store(Request $request): JsonResponse
+    /**
+     * Creates the property management; the administrator receives an invitation mail.
+     */
+    public function store(StoreTenantRegistrationRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'subdomain' => 'required|alpha_dash|unique:domains,domain',
-            'custom_domain' => 'nullable|string|unique:domains,domain',
-            'admin_name' => 'required|string|max:255',
-            'admin_email' => 'required|email|max:255',
-            'admin_password' => 'required|string|min:8',
-            'phone' => 'nullable|string|max:50',
-            'plan' => 'nullable|string|in:basic,standard,enterprise',
-        ]);
+        $data = $request->validated();
 
-        $tenant = $this->onboardingService->createTenant($validated);
+        $tenant = $this->onboardingService->createTenant($data);
 
         return response()->json([
-            'message' => 'Hausverwaltung erfolgreich registriert.',
-            'tenant' => $tenant->load('domains'),
+            'message' => 'Die Hausverwaltung wurde eingerichtet. Der Administrator erhält eine Einladung per E-Mail.',
+            'tenant_id' => $tenant->getTenantKey(),
         ], 201);
     }
 }

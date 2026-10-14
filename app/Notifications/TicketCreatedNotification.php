@@ -4,10 +4,11 @@ namespace App\Notifications;
 
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketCreatedNotification extends Notification
+class TicketCreatedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -25,7 +26,7 @@ class TicketCreatedNotification extends Notification
 
     public function toMail($notifiable)
     {
-        $url = url('/tickets/'.$this->ticket->id);
+        $url = route('filament.admin.resources.tickets.edit', $this->ticket);
 
         return (new MailMessage)
             ->subject('New Ticket: '.$this->ticket->title)

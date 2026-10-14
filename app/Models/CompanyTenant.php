@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Stancl\Tenancy\Contracts\TenantWithDatabase;
-use Stancl\Tenancy\Database\Concerns\HasDatabase;
-use Stancl\Tenancy\Database\Concerns\HasDomains;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 
-class CompanyTenant extends BaseTenant implements TenantWithDatabase
+/**
+ * A property management (tenant). All tenants share one database; their records carry
+ * company_tenant_id (see App\Models\Concerns\BelongsToCompanyTenant).
+ */
+class CompanyTenant extends BaseTenant
 {
-    use HasDatabase, HasDomains;
-
     protected $table = 'company_tenants';
 
     /**
@@ -28,5 +28,18 @@ class CompanyTenant extends BaseTenant implements TenantWithDatabase
             'plan',
             'is_active',
         ];
+    }
+
+    /**
+     * Tenants are active unless explicitly deactivated (the column defaults to true).
+     */
+    public function isActive(): bool
+    {
+        return (bool) ($this->getAttribute('is_active') ?? true);
+    }
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class, 'company_tenant_id');
     }
 }

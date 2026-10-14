@@ -26,6 +26,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rules\Unique;
 use UnitEnum;
 
 class InvoiceResource extends Resource
@@ -97,7 +98,7 @@ class InvoiceResource extends Resource
                 ->label('Rechnungsnummer')
                 ->required()
                 ->maxLength(255)
-                ->unique(Invoice::class, 'invoice_number', ignoreRecord: true),
+                ->unique(Invoice::class, 'invoice_number', ignoreRecord: true, modifyRuleUsing: fn (Unique $rule): Unique => $rule->where('company_tenant_id', tenant()?->getTenantKey())),
 
             Forms\Components\Select::make('renter_id')
                 ->relationship('renter', 'first_name')
