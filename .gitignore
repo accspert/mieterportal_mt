@@ -36,3 +36,5 @@ login.html
 # Nicht ins Git (lokale Daten, Archive, Zugangsdaten)
 /bereits_angeschrieben.txt
 /storage/tenant_test/
+.env.example
+.env.production.example
