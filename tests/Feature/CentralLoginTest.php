@@ -95,8 +95,11 @@ test('accounts with email authentication must enter the mailed code', function (
     Notification::fake();
     $user = userOfPropertyManagement('mfamail', 'chef@example.ch', 'Administrator', fn (User $user) => $user->toggleEmailAuthentication(true));
 
-    loginCentrally('chef@example.ch')->assertRedirect(route('auth.challenge'));
+    $response = loginCentrally('chef@example.ch')->assertRedirect(route('auth.challenge'));
     $this->assertGuest();
+
+    // Filament bindet den Mail-Code an die Session-ID; wie ein Browser das Session-Cookie weitergeben.
+    $this->withCookie(config('session.cookie'), $response->getCookie(config('session.cookie'))->getValue());
 
     $code = null;
     Notification::assertSentTo($user, VerifyEmailAuthentication::class, function (VerifyEmailAuthentication $notification) use (&$code): bool {
